@@ -20,7 +20,7 @@ Parameters:
     `weights`: An array of weight matrices where each matrix applies to its respective layer. So `weights` is also length `num_layers`. (input)
     `biases`: An array of bias vectors where each vector applies to its respective layer, i.e. `biases` is also length `num_layers`. (input)
                 e.g. If `biases[2][6]` is 3.4, then the SEVENTH neuron of layer THREE will use bias 3.4.
-    `output`: An array to hold the final output of the neural network. `output` should be length `layers[num_layers - 1]`. (output) 
+    `output`: Pointer to an array to hold the final output of the neural network. `*output` should be length `layers[num_layers - 1]`. (output) 
 
 Returns -1 on error, otherwise 0.
 */
@@ -31,6 +31,6 @@ int feed_forward(const double *features,
     const activation_func *activation_fns,
     const double ***weights, 
     const double **biases,
-    double *output
+    double **output
 );
 

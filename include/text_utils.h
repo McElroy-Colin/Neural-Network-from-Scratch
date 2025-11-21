@@ -43,7 +43,7 @@ int getline(char **input, const unsigned int default_size, FILE *stream);
 /*
 Convert the given CSV file into a matrix of doubles, where each row represents one line in the CSV.
 This function expects a CSV file consisting ONLY of floating point numbers. Error on any invalid characters/numbers.
-An empty line in the given CSV will stop processing at that line.
+An empty line in the given CSV will halt processing at that line.
 
 Parameters:
     `filename`: path to CSV file (input)
@@ -56,7 +56,7 @@ Parameters:
 
 Return -1 on error, otherwise return the number of lines read (rows in `*output`).
 */
-int csv_to_arr(
+int csv_to_matrix(
     const char *filename, 
     const unsigned int default_line_count,
     const unsigned int default_line_size,

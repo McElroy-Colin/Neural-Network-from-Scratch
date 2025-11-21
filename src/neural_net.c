@@ -16,7 +16,7 @@ int feed_forward(
     const activation_func *activation_fns,
     const double ***weights, 
     const double **biases,
-    double *output
+    double **output
 ) {
     if (!features || !layers || !activation_fns || !weights || !(*weights) || !(**weights) || !biases || !(*biases)) {
         perror("from feed_forward(), uninitialized input pointers\n");
@@ -77,9 +77,8 @@ int feed_forward(
     }
 
     // Since we swap buffers after each layer, the layer_input pointer actually points to the output of the final layer.
-    memcpy(output, layer_input, curr_neurons_out*sizeof(double));
+    *output = layer_input;
 
-    free(layer_input);
     free(layer_output);
     return 0;
 }

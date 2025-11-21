@@ -138,7 +138,7 @@ int getline(char **output, const unsigned int default_size, FILE *stream) {
     return size;
 }
 
-int csv_to_arr(
+int csv_to_matrix(
     const char *filename, 
     const unsigned int default_line_count,
     const unsigned int default_line_size,
@@ -148,7 +148,7 @@ int csv_to_arr(
 ) {
     FILE *file = fopen(filename, "r");
     if (!file) {
-        perror("from csv_to_arr(), could not open file");
+        perror("from csv_to_matrix(), could not open file");
         return -1;
     }
 
@@ -166,10 +166,10 @@ int csv_to_arr(
     *output_lengths = malloc(curr_alloc*sizeof(unsigned int));
 
     // Read the CSV line by line and process the text.
-    // Note, this while loop ends on EOF OR and empty line.
+    // Note, this while loop ends on EOF or an empty line.
     while ((line_size = getline(&line, default_line_size, file))) {
         if (line_size == -1) {
-            perror("from csv_to_arr(), getline() error");
+            perror("from csv_to_matrix(), getline() error");
             free(*output_lengths);
             free_2d_darr(*value_output, line_count);
             // Only free value_strs if it was initialized in a past iteration.
@@ -182,7 +182,7 @@ int csv_to_arr(
         // Split the line on whitespace and a comma.
         value_count = str_split(line, line_size, default_line_value_count, ", \t", 3, &value_strs);
         if (value_count == -1) {
-            perror("from csv_to_arr(), str_split() error");
+            perror("from csv_to_matrix(), str_split() error");
             free(line);
             free(*output_lengths);
             free_2d_darr(*value_output, line_count);
@@ -195,7 +195,7 @@ int csv_to_arr(
         // Allocate space for the CSV values to be stored in the correct inner output buffer.
         (*value_output)[line_count] = malloc(value_count*sizeof(double));
         if (!((*value_output)[line_count])) {
-            perror("from csv_to_arr(), allocation error");
+            perror("from csv_to_matrix(), allocation error");
             free(line);
             free(*output_lengths);
             free_2d_darr(*value_output, line_count);
@@ -209,7 +209,7 @@ int csv_to_arr(
         for (int i = 0; i < value_count; i++) {
             (*value_output)[line_count - 1][i] = strtod(value_strs[i], &conv_end);
             if (*conv_end != '\0') {
-                perror("from csv_to_arr(), string to double conversion error");
+                perror("from csv_to_matrix(), string to double conversion error");
                 free(line);
                 free(*output_lengths);
                 free_2d_darr(*value_output, line_count);
@@ -223,7 +223,7 @@ int csv_to_arr(
             curr_alloc *= 2;
             temp1 = realloc(*value_output, curr_alloc*sizeof(double *));
             if (!temp1) {
-                perror("from csv_to_arr(), reallocation error");
+                perror("from csv_to_matrix(), reallocation error");
                 free(line);
                 free(*output_lengths);
                 free_2d_darr(*value_output, line_count);
@@ -232,7 +232,7 @@ int csv_to_arr(
             }
             temp2 = realloc(*output_lengths, curr_alloc*sizeof(unsigned int));
             if (!temp2) {
-                perror("from csv_to_arr(), reallocation error");
+                perror("from csv_to_matrix(), reallocation error");
                 free(line);
                 free(*output_lengths);
                 free_2d_darr(*value_output, line_count);
@@ -252,14 +252,14 @@ int csv_to_arr(
     if (curr_alloc > line_count) {
         temp1 = realloc(*value_output, line_count*sizeof(double *));
         if (!temp1) {
-            perror("from csv_to_arr(), allocation error");
+            perror("from csv_to_matrix(), allocation error");
             free(*output_lengths);
             free_2d_darr(*value_output, line_count);
             return -1;
         }
         temp2 = realloc(*output_lengths, line_count*sizeof(unsigned int));
         if (!temp2) {
-            perror("from csv_to_arr(), allocation error");
+            perror("from csv_to_matrix(), allocation error");
             free(*output_lengths);
             free_2d_darr(*value_output, line_count);
             return -1;

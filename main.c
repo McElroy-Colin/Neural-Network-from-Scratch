@@ -59,10 +59,14 @@ int main(int argc, char** argv) {
     unsigned int *feature_lengths;
     
     // Convert the given CSV file to a matrix of doubles, so each row represents a feature vector.
-    const int num_feature_vectors = csv_to_arr(input_csv, 1, 30, 10, &features, &feature_lengths);
+    const int num_feature_vectors = csv_to_matrix(input_csv, 1, 30, 10, &features, &feature_lengths);
     if (num_feature_vectors == -1) {
-        perror("from main(), csv_to_arr() error");
+        perror("from main(), csv_to_matrix() error");
         return 1;
+    }
+
+    if (!cmd_line_csv) {
+        free(input_csv);
     }
 
     // TEMP
@@ -106,15 +110,13 @@ int main(int argc, char** argv) {
 
     /*
     
-    Call a trained neural network using feed-forward and reading in weights and biases from files...
+    Call a trained neural network using feed_forward() and reading in weights and biases from files...
 
     */
 
 
-    if (!cmd_line_csv) {
-        free(input_csv);
-    }
     free(layer_sizes);
+    free(feature_lengths);
     free_2d_darr(features, num_feature_vectors);
     return 0;
 }
