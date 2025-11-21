@@ -1,10 +1,9 @@
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
 
-#include "io_utils.h"
+#include "text_utils.h"
 #include "constants.h"
 #include "memory_utils.h"
 
@@ -21,9 +20,9 @@ int main(int argc, char** argv) {
         cmd_line_csv = 1;
     } else {
         printf("%s%s", INPUT_CSV_PROMPT, INPUT_SUFFIX);
-        const int line_size = getline(&input_csv, 20);
+        const int line_size = getline(&input_csv, 20, stdin);
         if (line_size == -1) {
-            perror("from main(), getline() allocation error");
+            perror("from main(), getline() error");
             return 1;
         }
     }
@@ -35,79 +34,75 @@ int main(int argc, char** argv) {
         char *layer_sizes_line;
 
         printf("%s%s", INPUT_LAYERS_PROMPT, INPUT_SUFFIX);
-        const int line_size = getline(&layer_sizes_line, 20);
+        const int line_size = getline(&layer_sizes_line, 20, stdin);
         if (line_size == -1) {
-            perror("from main(), getline() allocation error");
+            perror("from main(), getline() error");
             free(input_csv);
             return 1;
         }
 
-        char *word_start;
-        size_t word_size;
-        size_t curr_alloc = DEFAULT_NUM_LAYERS;
-        layer_str_sizes = malloc(curr_alloc*sizeof(char *));
-
-        int i = 0;
-        while (i < line_size) {
-            if (num_layers > curr_alloc) {
-                curr_alloc *= 2;
-                char **temp = realloc(layer_str_sizes, curr_alloc*sizeof(char *));
-                if (!temp) {
-                    perror("from main(), reallocation error");
-                    free(input_csv);
-                    free(layer_sizes_line);
-                    free_2d_arr((void **)layer_str_sizes, num_layers);
-                    return 1;
-                }
-
-                layer_str_sizes = temp;
-            }
-
-            // Bypass inital whitespace.
-            while (layer_sizes_line[i] && isspace((unsigned char)(layer_sizes_line[i]))) {
-                i++; 
-            }
-            if (!(layer_sizes_line[i])) {
-                break; 
-            }
-            word_start = &(layer_sizes_line[i]);
-            // Go to end of word.
-            while (layer_sizes_line[i] && !isspace((unsigned char)(layer_sizes_line[i]))) {
-                i++; 
-            }
-
-            word_size = (size_t)(&(layer_sizes_line[i]) - word_start);
-
-            layer_str_sizes[num_layers] = malloc(word_size*sizeof(char) + 1);
-            memcpy(layer_str_sizes[num_layers], word_start, word_size);
-            layer_str_sizes[num_layers++][word_size] = '\0';
+        num_layers = str_split(layer_sizes_line, line_size, DEFAULT_NUM_LAYERS, WHITESPACE, WHITESPACE_COUNT, &layer_str_sizes);
+        if (num_layers == -1) {
+            perror("from main(), str_split() error");
+            free(input_csv);
+            return 1;
         }
 
         free(layer_sizes_line);
+    }
 
-        char **temp = realloc(layer_str_sizes, num_layers*sizeof(char *));
-        if (!temp) {
-            perror("from main(), reallocation error");
+    double **features;
+    unsigned int *feature_lengths;
+    
+    const int num_feature_vectors = csv_to_arr(input_csv, 1, 30, 10, &features, &feature_lengths);
+    if (num_feature_vectors == -1) {
+        perror("from main(), csv_to_arr() error");
+        return 1;
+    }
+
+    for (int i = 0; i < num_feature_vectors; i++) {
+        printf("Feature %d: [", i);
+        for (int j = 0; j < feature_lengths[i]; j++) {
+            if (j < feature_lengths[i] - 1) {
+                printf("%f, ", features[i][j]);
+            } else {
+                printf("%f]\n", features[i][j]);
+            }
+        }
+    }
+
+    unsigned int *layer_sizes = malloc(num_layers*sizeof(unsigned int));
+    if (!layer_sizes) {
+        perror("from main(), allocation error");
+        free(input_csv);
+        free_2d_carr(layer_str_sizes, num_layers);
+        return 1;
+    }
+
+    int conversion_error;
+    
+    // Convert string layer size values into unsigned integers.
+    for (int i = 0; i < num_layers; i++) {
+        conversion_error = str_to_uint(layer_str_sizes[i], &(layer_sizes[i]));
+        if (conversion_error == -1) {
+            perror("from main(), invalid layer size specification\n");
             free(input_csv);
-            free_2d_arr((void **)layer_str_sizes, num_layers);
+            free_2d_carr(layer_str_sizes, num_layers);
+            free(layer_sizes);
             return 1;
         }
-
-        layer_str_sizes = temp;
     }
-
-    for (int i = 0; i < num_layers; i++) {
-        printf("|%s|", layer_str_sizes[i]);
-    }
-
-    // convert layer_str_sizes to int list
-
+    
     if (!cmd_line_layers) {
-        free_2d_arr((void **)layer_str_sizes, num_layers);
+        free_2d_carr(layer_str_sizes, num_layers);
     }
+
+    // Actually call neural net...
+
     if (!cmd_line_csv) {
         free(input_csv);
     }
-
+    free(layer_sizes);
+    free_2d_darr(features, num_feature_vectors);
     return 0;
 }
