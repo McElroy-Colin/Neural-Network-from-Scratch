@@ -11,7 +11,6 @@ void free_2d_darr(double **arr, const unsigned int num_allocated) {
     }
     free(arr);
 }
-
 void free_2d_carr(char **arr, const unsigned int num_allocated) {
     for (int i = 0; i < num_allocated; i++) {
         free(arr[i]);

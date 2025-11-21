@@ -9,18 +9,18 @@
 #include "memory_utils.h"
 
 
-int char_in_str(const char* str, const unsigned int str_size, char c) {
+int char_in_str(const char* str, const unsigned int str_size, const char c) {
     for (int i = 0; i < str_size; i++) {
         if (str[i] == c) {
-            return 1;
+            return i;
         }
     }
 
-    return 0;
+    return -1;
 }
 
 int str_split(
-    char *str, 
+    const char *str, 
     const unsigned int str_size, 
     const unsigned int default_size, 
     const char *delimeters, 
@@ -29,11 +29,12 @@ int str_split(
 ) {
     char *word_start;
     size_t word_size;
-    char **temp1;
+    char **temp;
 
-    unsigned int count = 0;
+    unsigned int word_count = 0;
+
+    // Allocate an array to store the substring. This can be resized as needed.
     size_t curr_alloc = default_size;
-
     *output = malloc(curr_alloc*sizeof(char *));
     if (!*output) {
         perror("from str_split(), allocation error");
@@ -42,49 +43,56 @@ int str_split(
 
     int i = 0;
     while (i < str_size) {
-        if (count >= curr_alloc) {
+        // Ensure that the outer output array can store all substrings by resizing it as needed.
+        if (word_count >= curr_alloc) {
             curr_alloc *= 2;
-            temp1 = realloc(*output, curr_alloc*sizeof(char *));
-            if (!temp1) {
+            temp = realloc(*output, curr_alloc*sizeof(char *));
+            if (!temp) {
                 perror("from str_split(), reallocation error");
-                free_2d_carr(*output, count);
+                free_2d_carr(*output, word_count);
                 return -1;
             }
-
-            *output = temp1;
+            *output = temp;
         }
 
         // Bypass inital delimeters.
-        while (str[i] && char_in_str(delimeters, delimeter_count, str[i])) { i++; }
+        while (str[i] && (char_in_str(delimeters, delimeter_count, str[i]) > -1)) { i++; }
+        // Handle when the line ends in delimeter characters.
         if (!(str[i])) { break; }
+
         word_start = &(str[i]);
+
         // Go to end of word.
-        while (str[i] && !char_in_str(delimeters, delimeter_count, str[i])) { i++; }
+        while (str[i] && (char_in_str(delimeters, delimeter_count, str[i]) == -1)) { i++; }
 
         word_size = (size_t)(&(str[i]) - word_start);
 
-        (*output)[count] = malloc(word_size*sizeof(char) + 1);
-        if (!((*output)[count])) {
+        // Allocate space for the word in the output inner array.
+        (*output)[word_count] = malloc(word_size*sizeof(char) + 1);
+        if (!((*output)[word_count])) {
             perror("from str_split(), allocation error");
-            free_2d_carr(*output, count);
+            free_2d_carr(*output, word_count);
             return -1;
         }
-        memcpy((*output)[count], word_start, word_size);
-        (*output)[count++][word_size] = '\0';
+        // Copy the word contents into the output inner array and terminate the string.
+        memcpy((*output)[word_count], word_start, word_size);
+        (*output)[word_count][word_size] = '\0';
+
+        word_count++;
     }
 
-    if (curr_alloc > count) {
-        temp1 = realloc(*output, count*sizeof(char *));
-        if (!temp1) {
+    // Wrap the outer output array.
+    if (curr_alloc > word_count) {
+        temp = realloc(*output, word_count*sizeof(char *));
+        if (!temp) {
             perror("from str_split(), allocation error");
-            free_2d_carr(*output, count);
+            free_2d_carr(*output, word_count);
             return -1;
         }
-
-        *output = temp1;
+        *output = temp;
     }
 
-    return count;
+    return word_count;
 }
 
 int getline(char **output, const unsigned int default_size, FILE *stream) {
@@ -101,23 +109,22 @@ int getline(char **output, const unsigned int default_size, FILE *stream) {
         // Double the size of the output buffer when needed.
         if (size*sizeof(char) + 1 > curr_alloc) {
             curr_alloc *= 2;
-
             temp = realloc(*output, curr_alloc + 1);
             if (!temp) {
                 perror("from getline(), reallocation error");
                 free(*output);
                 return -1;
             }
-
             *output = temp;
         }
 
-        (*output)[size++] = c;
+        (*output)[size] = c;
+        size++;
     }
 
     (*output)[size] = '\0';
 
-    // Allocate the correct amount of memory to store the full line.
+    // Wrap the line in the output buffer.
     if (curr_alloc > size) {
         temp = realloc(*output, size + 1);
         if (!temp) {
@@ -125,7 +132,6 @@ int getline(char **output, const unsigned int default_size, FILE *stream) {
             free(*output);
             return -1;
         }
-
         *output = temp;
     }
 
@@ -142,7 +148,7 @@ int csv_to_arr(
 ) {
     FILE *file = fopen(filename, "r");
     if (!file) {
-        perror("from csv_to_arr(), could not open file\n");
+        perror("from csv_to_arr(), could not open file");
         return -1;
     }
 
@@ -150,24 +156,30 @@ int csv_to_arr(
     int line_size, value_count;
     double **temp1;
     unsigned int *temp2;
-    
     char **value_strs = NULL;
     unsigned int line_count = 0;
+
+    // Allocate space for CSV rows and their lengths to be stored in the output buffers.
+    // These resize dynamically when needed.
     size_t curr_alloc = default_line_count;
     *value_output = malloc(curr_alloc*sizeof(double *));
     *output_lengths = malloc(curr_alloc*sizeof(unsigned int));
 
+    // Read the CSV line by line and process the text.
+    // Note, this while loop ends on EOF OR and empty line.
     while ((line_size = getline(&line, default_line_size, file))) {
         if (line_size == -1) {
             perror("from csv_to_arr(), getline() error");
             free(*output_lengths);
             free_2d_darr(*value_output, line_count);
+            // Only free value_strs if it was initialized in a past iteration.
             if (value_strs) {
                 free_2d_carr(value_strs, value_count);
             }
             return -1;
         }
         
+        // Split the line on whitespace and a comma.
         value_count = str_split(line, line_size, default_line_value_count, ", \t", 3, &value_strs);
         if (value_count == -1) {
             perror("from csv_to_arr(), str_split() error");
@@ -177,8 +189,10 @@ int csv_to_arr(
             return -1;
         }
 
+        // Store the number of values in the proper output buffer.
         (*output_lengths)[line_count] = value_count;
 
+        // Allocate space for the CSV values to be stored in the correct inner output buffer.
         (*value_output)[line_count] = malloc(value_count*sizeof(double));
         if (!((*value_output)[line_count])) {
             perror("from csv_to_arr(), allocation error");
@@ -191,6 +205,7 @@ int csv_to_arr(
 
         line_count++;
 
+        // Convert each value to a double and store it in the correct inner output buffer.
         for (int i = 0; i < value_count; i++) {
             (*value_output)[line_count - 1][i] = strtod(value_strs[i], &conv_end);
             if (*conv_end != '\0') {
@@ -203,6 +218,7 @@ int csv_to_arr(
             }
         }
 
+        // Resize both output buffers if needed.
         if (line_count >= curr_alloc) {
             curr_alloc *= 2;
             temp1 = realloc(*value_output, curr_alloc*sizeof(double *));
@@ -227,10 +243,12 @@ int csv_to_arr(
             *output_lengths = temp2;
         }
 
+        // Free up space for the next line and set of values after each iteration.
         free(line);
         free_2d_carr(value_strs, value_count);
     }
 
+    // Wrap the output buffers.
     if (curr_alloc > line_count) {
         temp1 = realloc(*value_output, line_count*sizeof(double *));
         if (!temp1) {
@@ -254,7 +272,7 @@ int csv_to_arr(
 }
 
 int str_to_uint(const char *str, unsigned int *output) {
-    int size = 0;
+    unsigned int size = 0;
     unsigned int value = 0;
 
     // Get string length and check validity of chracters.
@@ -276,5 +294,5 @@ int str_to_uint(const char *str, unsigned int *output) {
     }
 
     *output = value;
-    return 0;
+    return size;
 }
