@@ -163,7 +163,15 @@ int csv_to_matrix(
     // These resize dynamically when needed.
     size_t curr_alloc = default_line_count;
     *value_output = malloc(curr_alloc*sizeof(double *));
+    if (!*value_output) {
+        perror("from csv_to_arr(), allocation error");
+        return -1;
+    }
     *output_lengths = malloc(curr_alloc*sizeof(unsigned int));
+    if (!*output_lengths) {
+        perror("from csv_to_arr(), allocation error");
+        return -1;
+    }
 
     // Read the CSV line by line and process the text.
     // Note, this while loop ends on EOF or an empty line.
