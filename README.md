@@ -1,8 +1,8 @@
-# Neural Network from Scratch in C
+# Neural Network from Scratch in C with CUDA
 
 ## Overview
 
-This project is an experimental implementation of a **basic neural network** entirely in C. The main goal is to **practice and deepen my understanding of machine learning concepts** by building a neural network "by hand," without relying on high-level libraries like TensorFlow or PyTorch.
+This project is an experimental implementation of a **basic neural network** entirely in C and CUDA. The main goal is to **practice and deepen my understanding of machine learning concepts** by building a neural network "by hand," without relying on high-level libraries like TensorFlow or PyTorch.
 
 The project focuses on:
 
@@ -16,7 +16,7 @@ The project focuses on:
 
 The purpose of this project is educational:
 
-- To **reinforce my ML knowledge** by translating concepts directly into C code.
+- To **reinforce my ML knowledge** by translating concepts directly into C/CUDA code.
 - To explore **memory management, dynamic arrays, and low-level computation** in the context of machine learning.
 - To have a **hands-on neural network builder** that I can extend and experiment with in the future.
 
