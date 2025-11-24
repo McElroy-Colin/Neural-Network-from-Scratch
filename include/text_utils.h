@@ -1,5 +1,8 @@
 // Header file for text-related utility functions.
 
+#ifndef TEXT_UTILS_H
+#define TEXT_UTILS_H
+
 /*
 Return the given character's position in the given string if it is in the string, 
 otherwise return a negative value. `str_size` should be the length of the given string.
@@ -38,7 +41,7 @@ to the next line.
 
 Return the size of the stored line (excluding null byte) or -1 on an error.
 */
-int getline(char **input, const unsigned int default_size, FILE *stream);
+int get_next_line(char **input, const unsigned int default_size, FILE *stream);
 
 /*
 Convert the given CSV file into a matrix of doubles, where each row represents one line in the CSV.
@@ -71,3 +74,5 @@ Errors if any characters in `str` are non-digit characters.
 Returns -1 on error, otherwise return the length of the given string.
 */
 int str_to_uint(const char *str, unsigned int *output);
+
+#endif

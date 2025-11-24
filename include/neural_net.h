@@ -1,5 +1,8 @@
 // Header file for the primary neural network functions.
 
+#ifndef NEURAL_NET_H
+#define NEURAL_NET_H
+
 // Function pointer representing an element-wise activation function.    [WON'T WORK FOR SOFTMAX]
 typedef double (*activation_func)(double);
 
@@ -36,3 +39,4 @@ int cpu_feed_forward(const double *features,
     double **output
 );
 
+#endif

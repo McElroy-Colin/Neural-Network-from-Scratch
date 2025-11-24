@@ -1,5 +1,8 @@
 // Header file for defining constants and global variables.
 
+#ifndef CONSTANTS_H
+#define CONSTANTS_H
+
 #include <stdio.h>
 
             /*        NN Constants        */
@@ -18,3 +21,5 @@ const char *const INPUT_LAYERS_PROMPT = "Layer sizes";
 
 const char *const WHITESPACE = " \t\r\v\f"; // include '\n'?
 const unsigned int WHITESPACE_COUNT = 5;
+
+#endif

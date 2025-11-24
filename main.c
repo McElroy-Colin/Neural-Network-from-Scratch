@@ -24,9 +24,9 @@ int main(int argc, char** argv) {
     // Get a CSV file path from the user.
     } else {
         printf("%s%s", INPUT_CSV_PROMPT, INPUT_SUFFIX);
-        const int line_size = getline(&input_csv, 20, stdin);
+        const int line_size = get_next_line(&input_csv, 20, stdin);
         if (line_size == -1) {
-            perror("from main(), getline() error");
+            perror("from main(), get_next_line() error");
             return 1;
         } else if (line_size == 0) {
             fprintf(stderr, "Must enter a valid CSV path...\n");
@@ -44,9 +44,9 @@ int main(int argc, char** argv) {
 
         // Prompt user for layer sizes.
         printf("%s%s", INPUT_LAYERS_PROMPT, INPUT_SUFFIX);
-        const int line_size = getline(&layer_sizes_line, 20, stdin);
+        const int line_size = get_next_line(&layer_sizes_line, 20, stdin);
         if (line_size == -1) {
-            perror("from main(), getline() error");
+            perror("from main(), get_next_line() error");
             free(input_csv);
             return 1;
         } else if (line_size == 0) {
@@ -106,6 +106,7 @@ int main(int argc, char** argv) {
         free_2d_carr(layer_str_sizes, num_layers);
     }
 
+    /*
     // TEST: 5 (in) -> 7 -> 4 -> 2 (out)
 
     const double w1[7*5] = {
@@ -164,13 +165,7 @@ int main(int argc, char** argv) {
     }
 
     free_2d_darr(outputs, num_feature_vectors);
-
-    /*
-    
-    Call a trained neural network using cpu_feed_forward() and reading in weights and biases from files...
-
     */
-
 
     free(layer_sizes);
     free(feature_lengths);

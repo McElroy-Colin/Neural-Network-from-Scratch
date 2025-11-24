@@ -95,7 +95,7 @@ int str_split(
     return word_count;
 }
 
-int getline(char **output, const unsigned int default_size, FILE *stream) {
+int get_next_line(char **output, const unsigned int default_size, FILE *stream) {
     int c;
     char *temp;
     int size = 0;
@@ -111,7 +111,7 @@ int getline(char **output, const unsigned int default_size, FILE *stream) {
             curr_alloc *= 2;
             temp = realloc(*output, curr_alloc + 1);
             if (!temp) {
-                perror("from getline(), reallocation error");
+                perror("from get_next_line(), reallocation error");
                 free(*output);
                 return -1;
             }
@@ -128,7 +128,7 @@ int getline(char **output, const unsigned int default_size, FILE *stream) {
     if (curr_alloc > size) {
         temp = realloc(*output, size + 1);
         if (!temp) {
-            perror("from getline(), reallocation error");
+            perror("from get_next_line(), reallocation error");
             free(*output);
             return -1;
         }
@@ -175,9 +175,9 @@ int csv_to_matrix(
 
     // Read the CSV line by line and process the text.
     // Note, this while loop ends on EOF or an empty line.
-    while ((line_size = getline(&line, default_line_size, file))) {
+    while ((line_size = get_next_line(&line, default_line_size, file))) {
         if (line_size == -1) {
-            perror("from csv_to_matrix(), getline() error");
+            perror("from csv_to_matrix(), get_next_line() error");
             free(*output_lengths);
             free_2d_darr(*value_output, line_count);
             // Only free value_strs if it was initialized in a past iteration.
