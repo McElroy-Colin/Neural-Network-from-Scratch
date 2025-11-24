@@ -5,40 +5,40 @@
 #include <string.h>
 
 #include "neural_net.h"
-#include "compute_utils.h"
 
 
-int feed_forward(
+int cpu_feed_forward(
     const double *features, 
     const unsigned int num_features, 
     const unsigned int *layers, 
     const unsigned int num_layers,
+    const unsigned int max_layer_size,
     const activation_func *activation_fns,
-    const double ***weights, 
+    const double **weights,
     const double **biases,
     double **output
 ) {
-    if (!features || !layers || !activation_fns || !weights || !(*weights) || !(**weights) || !biases || !(*biases)) {
-        perror("from feed_forward(), uninitialized input pointers\n");
+    if (!features || !layers || !activation_fns || !weights || !(*weights) || !biases || !(*biases)) {
+        perror("from cpu_feed_forward(), uninitialized input pointers\n");
         return -1;
     }
 
     // Allocate two buffers, each able to hold any given layer at a time.
-    const unsigned int largest_layer_size = max(arr_max(layers, num_layers), num_features);
+    const unsigned int largest_layer_size = (max_layer_size > num_features) ? max_layer_size : num_features;
     double *layer_input = malloc(largest_layer_size*sizeof(double));
     if (!layer_input) {
-        perror("from feed_forward(), allocation error");
+        perror("from cpu_feed_forward(), allocation error");
         return -1;
     }
     double *layer_output = malloc(largest_layer_size*sizeof(double));
     if (!layer_output) {
-        perror("from feed_forward(), allocation error");
+        perror("from cpu_feed_forward(), allocation error");
         free(layer_input);
         return -1;
     }
 
-    double **curr_weights;
-    double *curr_biases;
+    const double *curr_weights;
+    const double *curr_biases;
     double *temp;
     activation_func curr_activation;
     unsigned int curr_neurons_out;
@@ -58,7 +58,7 @@ int feed_forward(
         for (int n = 0; n < curr_neurons_out; n++) {
             // Innermost loop goes through output from each neuron in the previous layer and computes intermediate weighted sum.
             for (int i = 0; i < curr_neurons_in; i++) {
-                z += curr_weights[n][i]*layer_input[i];
+                z += curr_weights[n*curr_neurons_in + i]*layer_input[i];
             }
             z += curr_biases[n];
 

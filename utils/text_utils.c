@@ -27,7 +27,7 @@ int str_split(
     const unsigned int delimeter_count, 
     char ***output
 ) {
-    char *word_start;
+    const char *word_start;
     size_t word_size;
     char **temp;
 
