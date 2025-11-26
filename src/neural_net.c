@@ -7,7 +7,7 @@
 #include "neural_net.h"
 
 
-int cpu_feed_forward(
+int feed_forward(
     const double *features, 
     const unsigned int num_features, 
     const unsigned int *layers, 
@@ -19,7 +19,7 @@ int cpu_feed_forward(
     double **output
 ) {
     if (!features || !layers || !activation_fns || !weights || !(*weights) || !biases || !(*biases)) {
-        perror("from cpu_feed_forward(), uninitialized input pointers\n");
+        perror("from feed_forward(), uninitialized input pointers\n");
         return -1;
     }
 
@@ -27,12 +27,12 @@ int cpu_feed_forward(
     const unsigned int largest_layer_size = (max_layer_size > num_features) ? max_layer_size : num_features;
     double *layer_input = malloc(largest_layer_size*sizeof(double));
     if (!layer_input) {
-        perror("from cpu_feed_forward(), allocation error");
+        perror("from feed_forward(), allocation error");
         return -1;
     }
     double *layer_output = malloc(largest_layer_size*sizeof(double));
     if (!layer_output) {
-        perror("from cpu_feed_forward(), allocation error");
+        perror("from feed_forward(), allocation error");
         free(layer_input);
         return -1;
     }
@@ -41,7 +41,7 @@ int cpu_feed_forward(
     const double *curr_biases;
     double *temp;
     activation_func curr_activation;
-    unsigned int curr_neurons_out;
+    unsigned int curr_neurons_out, curr_row;
     double z = 0.0;
 
     unsigned int curr_neurons_in = num_features;
@@ -53,15 +53,17 @@ int cpu_feed_forward(
         curr_biases = biases[l];
         curr_activation = activation_fns[l];
         curr_neurons_out = layers[l];
+        curr_row = 0;
 
         // Inner loop goes through each neuron in the current layer. 
         for (int n = 0; n < curr_neurons_out; n++) {
             // Innermost loop goes through output from each neuron in the previous layer and computes intermediate weighted sum.
             for (int i = 0; i < curr_neurons_in; i++) {
-                z += curr_weights[n*curr_neurons_in + i]*layer_input[i];
+                z += curr_weights[curr_row + i]*layer_input[i];
             }
             z += curr_biases[n];
 
+            curr_row += curr_neurons_in;
             // Pass the current neuron's weighted sum to the current layer's activation function.
             layer_output[n] = curr_activation(z);
             z = 0.0;

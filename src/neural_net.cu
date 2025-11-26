@@ -1,6 +1,26 @@
 #include <stdio.h>
 #include <cuda_runtime.h>
 
+#include "neural_net.h"
+
+
+__global__ int feed_forward(const double *features,
+    const unsigned int num_features,  
+    const unsigned int *layers, 
+    const unsigned int num_layers,
+    const unsigned int max_layer_size,
+    const activation_func *activation_fns,
+    const double **weights, 
+    const double **biases,
+    double **output
+) {
+    // parallel implementation...
+}
+
+
+
+
+
 // CUDA kernel: runs on GPU
 __global__ void add_vectors(const float *a, const float *b, float *c, int n) {
     int i = threadIdx.x + blockIdx.x * blockDim.x;

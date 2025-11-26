@@ -149,7 +149,7 @@ int main(int argc, char** argv) {
 
     double **outputs = malloc(sizeof(double *)*num_feature_vectors);
     for (int i = 0; i < num_feature_vectors; i++) {
-        cpu_feed_forward(
+        feed_forward(
             features[i], 
             feature_lengths[i], 
             layer_sizes, 
