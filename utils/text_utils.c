@@ -1,6 +1,5 @@
 // Source file for text-related utility functions.
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
@@ -163,12 +162,12 @@ int csv_to_matrix(
     // These resize dynamically when needed.
     size_t curr_alloc = default_line_count;
     *value_output = malloc(curr_alloc*sizeof(double *));
-    if (!*value_output) {
+    if (!(*value_output)) {
         perror("from csv_to_arr(), allocation error");
         return -1;
     }
     *output_lengths = malloc(curr_alloc*sizeof(unsigned int));
-    if (!*output_lengths) {
+    if (!(*output_lengths)) {
         perror("from csv_to_arr(), allocation error");
         return -1;
     }

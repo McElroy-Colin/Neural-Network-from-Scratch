@@ -1,13 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <ctype.h>
-#include <string.h>
 
-#include "neural_net.h"
-#include "activation_functions.h"
 #include "text_utils.h"
 #include "constants.h"
-#include "compute_utils.h"
 #include "memory_utils.h"
 
 // Take command line or runtime user input and construct a feed-forwad neural network.

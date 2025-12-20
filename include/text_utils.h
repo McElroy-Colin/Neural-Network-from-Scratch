@@ -3,6 +3,8 @@
 #ifndef TEXT_UTILS_H
 #define TEXT_UTILS_H
 
+#include <stdio.h>
+
 /*
 Return the given character's position in the given string if it is in the string, 
 otherwise return a negative value. `str_size` should be the length of the given string.
@@ -71,7 +73,7 @@ int csv_to_matrix(
 /*
 Convert the given string into an unsigned integer and store result in `output`.
 Errors if any characters in `str` are non-digit characters.
-Returns -1 on error, otherwise return the length of the given string.
+Return -1 on error, otherwise return the length of the given string.
 */
 int str_to_uint(const char *str, unsigned int *output);
 

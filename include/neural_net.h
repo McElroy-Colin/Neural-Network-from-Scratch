@@ -7,7 +7,7 @@
 typedef double (*activation_func)(double);
 
 /*
-Perform a feed-forward dense neural network computation given relevant parameters.
+Perform a serial feed-forward dense neural network computation given relevant parameters.
 This function assumes that all vector/matrix dimensionality is correct. 
     e.g. weight matrices should have the correct dimensionality for their previous and current layer sizes.
 
@@ -28,7 +28,7 @@ Parameters:
 
 Returns -1 on error, otherwise 0.
 */
-int feed_forward(const double *features,
+int feed_forward_srl(const double *features,
     const unsigned int num_features,  
     const unsigned int *layers, 
     const unsigned int num_layers,

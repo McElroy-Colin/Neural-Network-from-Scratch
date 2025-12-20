@@ -7,7 +7,7 @@
 #include "neural_net.h"
 
 
-int feed_forward(
+int feed_forward_srl(
     const double *features, 
     const unsigned int num_features, 
     const unsigned int *layers, 
@@ -18,8 +18,9 @@ int feed_forward(
     const double **biases,
     double **output
 ) {
+    // TODO: This can potentially be moved outside of the function call?
     if (!features || !layers || !activation_fns || !weights || !(*weights) || !biases || !(*biases)) {
-        perror("from feed_forward(), uninitialized input pointers\n");
+        perror("from feed_forward_srl(), uninitialized input pointers\n");
         return -1;
     }
 
@@ -27,12 +28,12 @@ int feed_forward(
     const unsigned int largest_layer_size = (max_layer_size > num_features) ? max_layer_size : num_features;
     double *layer_input = malloc(largest_layer_size*sizeof(double));
     if (!layer_input) {
-        perror("from feed_forward(), allocation error");
+        perror("from feed_forward_srl(), allocation error");
         return -1;
     }
     double *layer_output = malloc(largest_layer_size*sizeof(double));
     if (!layer_output) {
-        perror("from feed_forward(), allocation error");
+        perror("from feed_forward_srl(), allocation error");
         free(layer_input);
         return -1;
     }

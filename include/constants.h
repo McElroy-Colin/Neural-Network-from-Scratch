@@ -19,7 +19,7 @@ const char *const INPUT_LAYERS_PROMPT = "Layer sizes";
 
             /*      General Constants      */
 
-const char *const WHITESPACE = " \t\r\v\f"; // include '\n'?
+const char *const WHITESPACE = " \t\r\v\f"; // TODO: include '\n'?
 const unsigned int WHITESPACE_COUNT = 5;
 
 #endif

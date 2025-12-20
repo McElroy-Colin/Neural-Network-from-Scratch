@@ -1,7 +1,7 @@
 CC = gcc
 
-CFLAGS = -lm -Iinclude
-RLFLAGS = $(CFLAGS) -O3 -march=native -Wno-sign-compare 
+CFLAGS = -lm -Iinclude -Wno-sign-compare 
+RLFLAGS = $(CFLAGS) -O3 -march=native
 DBGFLAGS = $(CFLAGS) -g -O0 -Wall -Wextra -Wpedantic 
 
 SRCS = main.c $(wildcard src/*.c) $(wildcard utils/*.c)

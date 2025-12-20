@@ -4,7 +4,7 @@
 #include "neural_net.h"
 
 
-__global__ int feed_forward(const double *features,
+__global__ void feed_forward_krnl(const double *features,
     const unsigned int num_features,  
     const unsigned int *layers, 
     const unsigned int num_layers,
