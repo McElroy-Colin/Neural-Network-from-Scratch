@@ -8,6 +8,7 @@ typedef double (*activation_func)(double);
 
 /*
 Perform a serial feed-forward dense neural network computation given relevant parameters.
+Note the `srl` (CPU) and `krnl` (GPU) versions of this function.
 This function assumes that all vector/matrix dimensionality is correct. 
     e.g. weight matrices should have the correct dimensionality for their previous and current layer sizes.
 
@@ -29,6 +30,17 @@ Parameters:
 Returns -1 on error, otherwise 0.
 */
 int feed_forward_srl(const double *features,
+    const unsigned int num_features,  
+    const unsigned int *layers, 
+    const unsigned int num_layers,
+    const unsigned int max_layer_size,
+    const activation_func *activation_fns,
+    const double **weights, 
+    const double **biases,
+    double **output
+);
+
+int feed_forward_krnl(const double *features,
     const unsigned int num_features,  
     const unsigned int *layers, 
     const unsigned int num_layers,
