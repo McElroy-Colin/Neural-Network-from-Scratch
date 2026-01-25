@@ -24,4 +24,11 @@ array must be of length at least `num_allocated`.
 */
 void free_2d_carr(char **arr, const unsigned int num_allocated);
 
+/*
+Free each given pointer from the selected memory (cudafree for GPU).
+This function assumes the given pointers are not null except the final argument.
+*/
+void free_ptrs(void *p1, ...);
+void cudafree_ptrs(void *p1, ...);
+
 #endif

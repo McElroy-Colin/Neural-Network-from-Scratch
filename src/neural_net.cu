@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <__clang_cuda_builtin_vars.h>
 #include <stdio.h>
 #include <cuda_runtime.h>
 
@@ -25,12 +24,12 @@ __global__ void compute_feed_forward(const double *features,
 }
 
 int feed_forward_krnl(const double *features,
-    const unsigned int num_features,  
-    const unsigned int *layers, 
+    const unsigned int num_features,
+    const unsigned int *layers,
     const unsigned int num_layers,
     const unsigned int max_layer_size,
     const activation_func *activation_fns,
-    const double **weights, 
+    const double **weights,
     const double **biases,
     double **output
 ) {
@@ -41,10 +40,28 @@ int feed_forward_krnl(const double *features,
     }
 
     // Assume the entire network can fit on GPU memory (for now)...
-    double **gpu_weights;
-    cudaError_t err = cudaMalloc(&gpu_weights, num_layers*sizeof(double *));
+    // Copy features, structure, weights, and biases to the GPU.
+
+    double *gpu_features;
+    cudaError_t err = cudaMalloc(&gpu_features, num_features*sizeof(double));
     if (err != cudaSuccess) {
         perror("from feed_forward_krnl(), cuda allocation error");
+        return -1;
+    }
+    err = cudaMemcpy(gpu_features, features, num_features*sizeof(double), cudaMemcpyHostToDevice);
+    if (err != cudaSuccess) {
+        perror("from feed_forward_krnl(), cuda memory copy error");
+        cudaFree(gpu_features);
+        return -1;
+    }
+
+    // `layers` can be passed in each kernel call as a scalar...
+
+    double **gpu_weights;
+    err = cudaMalloc(&gpu_weights, num_layers*sizeof(double *));
+    if (err != cudaSuccess) {
+        perror("from feed_forward_krnl(), cuda allocation error");
+        cudaFree(gpu_features);
         return -1;
     }
 
@@ -52,11 +69,9 @@ int feed_forward_krnl(const double *features,
     err = cudaMalloc(&gpu_biases, num_layers*sizeof(double *));
     if (err != cudaSuccess) {
         perror("from feed_forward_krnl(), cuda allocation error");
-        cudaFree(gpu_weights);
+        cudafree_ptrs(gpu_features, gpu_weights, NULL);
         return -1;
     }
-
-    // TODO: Implement bias allocations and copies with `gpu_biases`...
 
     int weight_rows = num_features;
     for (int i = 0; i < num_layers; i++) {
@@ -65,6 +80,17 @@ int feed_forward_krnl(const double *features,
         err = cudaMalloc(&curr_weights, weight_rows*layers[i]*sizeof(double));
         if (err != cudaSuccess) {
             perror("from feed_forward_krnl(), cuda allocation error");
+            cudaFree(gpu_features);
+            cudafree_2d_darr(gpu_weights, i);
+            cudafree_2d_darr(gpu_biases, i);
+            return -1;
+        }
+        
+        double *curr_biases;
+        err = cudaMalloc(&curr_biases, layers[i]*sizeof(double));
+        if (err != cudaSuccess) {
+            perror("from feed_forward_krnl(), cuda allocation error");
+            cudafree_ptrs(gpu_features, curr_weights, NULL);
             cudafree_2d_darr(gpu_weights, i);
             cudafree_2d_darr(gpu_biases, i);
             return -1;
@@ -74,6 +100,16 @@ int feed_forward_krnl(const double *features,
         err = cudaMemcpy(curr_weights, weights[i], weight_rows*layers[i]*sizeof(double), cudaMemcpyHostToDevice);
         if (err != cudaSuccess) {
             perror("from feed_forward_krnl(), cuda memory copy error");
+            cudafree_ptrs(gpu_features, curr_weights, curr_biases, NULL);
+            cudafree_2d_darr(gpu_weights, i);
+            cudafree_2d_darr(gpu_biases, i);
+            return -1;
+        }
+
+        err = cudaMemcpy(curr_biases, biases[i], layers[i]*sizeof(double), cudaMemcpyHostToDevice);
+        if (err != cudaSuccess) {
+            perror("from feed_forward_krnl(), cuda memory copy error");
+            cudafree_ptrs(gpu_features, curr_weights, curr_biases, NULL);
             cudafree_2d_darr(gpu_weights, i);
             cudafree_2d_darr(gpu_biases, i);
             return -1;
@@ -83,6 +119,16 @@ int feed_forward_krnl(const double *features,
         err = cudaMemcpy(gpu_weights + i, &curr_weights, sizeof(double *), cudaMemcpyHostToDevice);
         if (err != cudaSuccess) {
             perror("from feed_forward_krnl(), cuda memory copy error");
+            cudafree_ptrs(gpu_features, curr_weights, curr_biases, NULL);
+            cudafree_2d_darr(gpu_weights, i);
+            cudafree_2d_darr(gpu_biases, i);
+            return -1;
+        }
+
+        err = cudaMemcpy(gpu_biases + i, &curr_biases, sizeof(double *), cudaMemcpyHostToDevice);
+        if (err != cudaSuccess) {
+            perror("from feed_forward_krnl(), cuda memory copy error");
+            cudafree_ptrs(gpu_features, curr_weights, curr_biases, NULL);
             cudafree_2d_darr(gpu_weights, i);
             cudafree_2d_darr(gpu_biases, i);
             return -1;

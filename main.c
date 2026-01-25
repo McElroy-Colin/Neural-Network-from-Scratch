@@ -90,9 +90,8 @@ int main(int argc, char** argv) {
         conversion_error = str_to_uint(layer_str_sizes[i], &(layer_sizes[i]));
         if (conversion_error == -1) {
             perror("from main(), invalid layer size specification\n");
-            free(input_csv);
+            free_ptrs(input_csv, layer_sizes, NULL);
             free_2d_carr(layer_str_sizes, num_layers);
-            free(layer_sizes);
             return 1;
         }
     }
@@ -162,8 +161,7 @@ int main(int argc, char** argv) {
     free_2d_darr(outputs, num_feature_vectors);
     */
 
-    free(layer_sizes);
-    free(feature_lengths);
+    free_ptrs(layer_sizes, feature_lengths, NULL);
     free_2d_darr(features, num_feature_vectors);
     return 0;
 }
