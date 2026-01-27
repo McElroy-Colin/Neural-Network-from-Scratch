@@ -15,7 +15,7 @@ __global__ void compute_feed_forward(const double *features,
     const unsigned int *layers, 
     const unsigned int num_layers,
     const unsigned int max_layer_size,
-    const activation_func *activation_fns,
+    const ActivationFunc *activation_fns,
     const double **weights, 
     const double **biases,
     double **output,
@@ -28,7 +28,7 @@ int feed_forward_krnl(const double *features,
     const unsigned int *layers,
     const unsigned int num_layers,
     const unsigned int max_layer_size,
-    const activation_func *activation_fns,
+    const ActivationFunc *activation_fns,
     const double **weights,
     const double **biases,
     double **output
@@ -145,17 +145,23 @@ int feed_forward_krnl(const double *features,
     err = cudaMalloc(&layer_input, largest_layer_size*sizeof(double));
     if (err != cudaSuccess) {
         perror("from feed_forward_krnl(), cuda allocation error");
+        cudaFree(gpu_features);
         cudafree_2d_darr(gpu_weights, num_layers);
+        cudafree_2d_darr(gpu_biases, num_layers);
         return -1;
     }
     double *layer_output;
     err = cudaMalloc(&layer_output, largest_layer_size*sizeof(double));
     if (err != cudaSuccess) {
         perror("from feed_forward_krnl(), cuda allocation error");
+        cudaFree(gpu_features);
         cudafree_2d_darr(gpu_weights, num_layers);
+        cudafree_2d_darr(gpu_biases, num_layers);
         cudaFree(layer_input);
         return -1;
     }
+
+    // TODO: Handle gpu output maybe...
 
     int status = 0;
 
@@ -163,7 +169,7 @@ int feed_forward_krnl(const double *features,
     int num_blocks = 1;
     int num_threads = 1;
 
-    compute_feed_forward<<<num_blocks, num_threads>>>(features, num_features, layers, num_layers, max_layer_size, activation_fns, weights, biases, output, &status);
+    compute_feed_forward<<<num_blocks, num_threads>>>(gpu_features, num_features, layers /* not necessary maybe */, num_layers, max_layer_size, activation_fns, gpu_weights, gpu_biases, output, &status);
 
     return status;
 }

@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "neural_net.h"
+#include "activation_functions.h"
 
 
 int feed_forward_srl(
@@ -13,7 +14,7 @@ int feed_forward_srl(
     const unsigned int *layers, 
     const unsigned int num_layers,
     const unsigned int max_layer_size,
-    const activation_func *activation_fns,
+    const ActivationFunc *activation_fns,
     const double **weights,
     const double **biases,
     double **output
@@ -41,7 +42,7 @@ int feed_forward_srl(
     const double *curr_weights;
     const double *curr_biases;
     double *temp;
-    activation_func curr_activation;
+    ActivationFunc curr_activation;
     unsigned int curr_neurons_out, curr_row;
     double z = 0.0;
 
@@ -66,7 +67,7 @@ int feed_forward_srl(
 
             curr_row += curr_neurons_in;
             // Pass the current neuron's weighted sum to the current layer's activation function.
-            layer_output[n] = curr_activation(z);
+            layer_output[n] = activation_func_srl(z, curr_activation);
             z = 0.0;
         }
 
@@ -81,6 +82,8 @@ int feed_forward_srl(
 
     // Since we swap buffers after each layer, the layer_input pointer actually points to the output of the final layer.
     *output = layer_input;
+
+    // TODO: Wrap the output buffer, since it is only length layers[num_layers - 1] and layer_input is length largest_layer_size
 
     free(layer_output);
     return 0;
