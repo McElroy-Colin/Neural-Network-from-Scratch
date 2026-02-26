@@ -2,6 +2,9 @@
 notes.txt
 .vscode
 sample_data/
+*test.c
+*test.cu
+*test.h
 
 # Prerequisites
 *.d

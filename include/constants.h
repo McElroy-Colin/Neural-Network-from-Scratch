@@ -7,19 +7,26 @@
 
             /*        NN Constants        */
 
-const int DEFAULT_NUM_LAYERS = 5;
+#define DEFAULT_NUM_LAYERS 5
+
+
+            /*      GPU Constants       */
+#define TILE_SIZE 256
+    // Should be a multiple of 32 to avoid a partially-filled warp of threads.
+    // Depends on shared memory space per SM, usually 48 KB at 8 bytes per double.
+    // 256 is a good option.
 
 
             /*      Input Messages       */
             
-const char *const INPUT_SUFFIX = ">  ";
-const char *const INPUT_CSV_PROMPT = "Path to the input data CSV file";
-const char *const INPUT_LAYERS_PROMPT = "Layer sizes";
+#define INPUT_SUFFIX ">  "
+#define INPUT_CSV_PROMPT "Path to the input data CSV file"
+#define INPUT_LAYERS_PROMPT "Layer sizes"
 
 
             /*      General Constants      */
 
-const char *const WHITESPACE = " \t\r\v\f"; // TODO: include '\n'?
-const unsigned int WHITESPACE_COUNT = 5;
+#define WHITESPACE " \t\r\v\f" // TODO: include '\n'?
+#define WHITESPACE_COUNT 5
 
 #endif

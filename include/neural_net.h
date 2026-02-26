@@ -3,8 +3,7 @@
 #ifndef NEURAL_NET_H
 #define NEURAL_NET_H
 
-// Function pointer representing an element-wise activation function.    [WON'T WORK FOR SOFTMAX]
-typedef double (*activation_func)(double);
+#include "activation_functions.h"
 
 /*
 Perform a serial feed-forward dense neural network computation given relevant parameters.
@@ -19,9 +18,9 @@ Parameters:
                 e.g. If `layers[2]` is 5, then the THIRD layer after input has FIVE neurons.
     `num_layers`: number of layers in the network excluding an input vector; also the length of `layers` (input)
     `max_layer_size`: largest element of `layers` (input)
-    `activation_fns`: An array of function pointers to activation functions. Each function applies to its respective layer,
+    `activation_fns`: An array of function enum values spercifying the activation for its respective layer,
                     so `activation_fns` is also length `num_layers`. (input)
-                        e.g. If `activation_fns[3]` points to a sigmoid function, then layer FOUR will use sigmoid on its neurons.
+                        e.g. If `activation_fns[3]` references a sigmoid function, then layer FOUR will use sigmoid on its neurons.
     `weights`: An array of flattened weight matrices where each matrix applies to its respective layer. So `weights` is also length `num_layers`. (input)
     `biases`: An array of bias vectors where each vector applies to its respective layer, i.e. `biases` is also length `num_layers`. (input)
                 e.g. If `biases[2][6]` is 3.4, then the SEVENTH neuron of layer THREE will use bias 3.4.
@@ -34,7 +33,7 @@ int feed_forward_srl(const double *features,
     const unsigned int *layers, 
     const unsigned int num_layers,
     const unsigned int max_layer_size,
-    const activation_func *activation_fns,
+    const ActivationFunc *activation_fns,
     const double **weights, 
     const double **biases,
     double **output
@@ -45,7 +44,7 @@ int feed_forward_krnl(const double *features,
     const unsigned int *layers, 
     const unsigned int num_layers,
     const unsigned int max_layer_size,
-    const activation_func *activation_fns,
+    const ActivationFunc *activation_fns,
     const double **weights, 
     const double **biases,
     double **output

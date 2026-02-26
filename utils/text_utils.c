@@ -36,7 +36,7 @@ int str_split(
     size_t curr_alloc = default_size;
     *output = malloc(curr_alloc*sizeof(char *));
     if (!*output) {
-        perror("from str_split(), allocation error");
+        fprintf(stderr, "from str_split(), allocation error");
         return -1;
     }
 
@@ -47,7 +47,7 @@ int str_split(
             curr_alloc *= 2;
             temp = realloc(*output, curr_alloc*sizeof(char *));
             if (!temp) {
-                perror("from str_split(), reallocation error");
+                fprintf(stderr, "from str_split(), reallocation error");
                 free_2d_carr(*output, word_count);
                 return -1;
             }
@@ -69,7 +69,7 @@ int str_split(
         // Allocate space for the word in the output inner array.
         (*output)[word_count] = malloc(word_size*sizeof(char) + 1);
         if (!((*output)[word_count])) {
-            perror("from str_split(), allocation error");
+            fprintf(stderr, "from str_split(), allocation error");
             free_2d_carr(*output, word_count);
             return -1;
         }
@@ -84,7 +84,7 @@ int str_split(
     if (curr_alloc > word_count) {
         temp = realloc(*output, word_count*sizeof(char *));
         if (!temp) {
-            perror("from str_split(), allocation error");
+            fprintf(stderr, "from str_split(), allocation error");
             free_2d_carr(*output, word_count);
             return -1;
         }
@@ -110,7 +110,7 @@ int get_next_line(char **output, const unsigned int default_size, FILE *stream) 
             curr_alloc *= 2;
             temp = realloc(*output, curr_alloc + 1);
             if (!temp) {
-                perror("from get_next_line(), reallocation error");
+                fprintf(stderr, "from get_next_line(), reallocation error");
                 free(*output);
                 return -1;
             }
@@ -127,7 +127,7 @@ int get_next_line(char **output, const unsigned int default_size, FILE *stream) 
     if (curr_alloc > size) {
         temp = realloc(*output, size + 1);
         if (!temp) {
-            perror("from get_next_line(), reallocation error");
+            fprintf(stderr, "from get_next_line(), reallocation error");
             free(*output);
             return -1;
         }
@@ -147,7 +147,7 @@ int csv_to_matrix(
 ) {
     FILE *file = fopen(filename, "r");
     if (!file) {
-        perror("from csv_to_matrix(), could not open file");
+        fprintf(stderr, "from csv_to_matrix(), could not open file");
         return -1;
     }
 
@@ -163,12 +163,12 @@ int csv_to_matrix(
     size_t curr_alloc = default_line_count;
     *value_output = malloc(curr_alloc*sizeof(double *));
     if (!(*value_output)) {
-        perror("from csv_to_arr(), allocation error");
+        fprintf(stderr, "from csv_to_arr(), allocation error");
         return -1;
     }
     *output_lengths = malloc(curr_alloc*sizeof(unsigned int));
     if (!(*output_lengths)) {
-        perror("from csv_to_arr(), allocation error");
+        fprintf(stderr, "from csv_to_arr(), allocation error");
         return -1;
     }
 
@@ -176,7 +176,7 @@ int csv_to_matrix(
     // Note, this while loop ends on EOF or an empty line.
     while ((line_size = get_next_line(&line, default_line_size, file))) {
         if (line_size == -1) {
-            perror("from csv_to_matrix(), get_next_line() error");
+            fprintf(stderr, "from csv_to_matrix(), get_next_line() error");
             free(*output_lengths);
             free_2d_darr(*value_output, line_count);
             // Only free value_strs if it was initialized in a past iteration.
@@ -189,7 +189,7 @@ int csv_to_matrix(
         // Split the line on whitespace and a comma.
         value_count = str_split(line, line_size, default_line_value_count, ", \t", 3, &value_strs);
         if (value_count == -1) {
-            perror("from csv_to_matrix(), str_split() error");
+            fprintf(stderr, "from csv_to_matrix(), str_split() error");
             free(line);
             free(*output_lengths);
             free_2d_darr(*value_output, line_count);
@@ -202,7 +202,7 @@ int csv_to_matrix(
         // Allocate space for the CSV values to be stored in the correct inner output buffer.
         (*value_output)[line_count] = malloc(value_count*sizeof(double));
         if (!((*value_output)[line_count])) {
-            perror("from csv_to_matrix(), allocation error");
+            fprintf(stderr, "from csv_to_matrix(), allocation error");
             free(line);
             free(*output_lengths);
             free_2d_darr(*value_output, line_count);
@@ -216,7 +216,7 @@ int csv_to_matrix(
         for (int i = 0; i < value_count; i++) {
             (*value_output)[line_count - 1][i] = strtod(value_strs[i], &conv_end);
             if (*conv_end != '\0') {
-                perror("from csv_to_matrix(), string to double conversion error");
+                fprintf(stderr, "from csv_to_matrix(), string to double conversion error");
                 free(line);
                 free(*output_lengths);
                 free_2d_darr(*value_output, line_count);
@@ -230,7 +230,7 @@ int csv_to_matrix(
             curr_alloc *= 2;
             temp1 = realloc(*value_output, curr_alloc*sizeof(double *));
             if (!temp1) {
-                perror("from csv_to_matrix(), reallocation error");
+                fprintf(stderr, "from csv_to_matrix(), reallocation error");
                 free(line);
                 free(*output_lengths);
                 free_2d_darr(*value_output, line_count);
@@ -239,7 +239,7 @@ int csv_to_matrix(
             }
             temp2 = realloc(*output_lengths, curr_alloc*sizeof(unsigned int));
             if (!temp2) {
-                perror("from csv_to_matrix(), reallocation error");
+                fprintf(stderr, "from csv_to_matrix(), reallocation error");
                 free(line);
                 free(*output_lengths);
                 free_2d_darr(*value_output, line_count);
@@ -259,14 +259,14 @@ int csv_to_matrix(
     if (curr_alloc > line_count) {
         temp1 = realloc(*value_output, line_count*sizeof(double *));
         if (!temp1) {
-            perror("from csv_to_matrix(), allocation error");
+            fprintf(stderr, "from csv_to_matrix(), allocation error");
             free(*output_lengths);
             free_2d_darr(*value_output, line_count);
             return -1;
         }
         temp2 = realloc(*output_lengths, line_count*sizeof(unsigned int));
         if (!temp2) {
-            perror("from csv_to_matrix(), allocation error");
+            fprintf(stderr, "from csv_to_matrix(), allocation error");
             free(*output_lengths);
             free_2d_darr(*value_output, line_count);
             return -1;
@@ -285,7 +285,7 @@ int str_to_uint(const char *str, unsigned int *output) {
     // Get string length and check validity of chracters.
     while (*str) { 
         if (('0' > *str) || (*str > '9')) {
-            perror("from str_to_uint(), string does must contain only digits\n");
+            fprintf(stderr, "from str_to_uint(), string does must contain only digits\n");
             return -1;
         }
 

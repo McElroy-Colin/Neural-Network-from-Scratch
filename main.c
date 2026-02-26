@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
         printf("%s%s", INPUT_CSV_PROMPT, INPUT_SUFFIX);
         const int line_size = get_next_line(&input_csv, 20, stdin);
         if (line_size == -1) {
-            perror("from main(), get_next_line() error");
+            fprintf(stderr, "from main(), get_next_line() error");
             return 1;
         } else if (line_size == 0) {
             fprintf(stderr, "Must enter a valid CSV path...\n");
@@ -41,7 +41,7 @@ int main(int argc, char** argv) {
         printf("%s%s", INPUT_LAYERS_PROMPT, INPUT_SUFFIX);
         const int line_size = get_next_line(&layer_sizes_line, 20, stdin);
         if (line_size == -1) {
-            perror("from main(), get_next_line() error");
+            fprintf(stderr, "from main(), get_next_line() error");
             free(input_csv);
             return 1;
         } else if (line_size == 0) {
@@ -53,7 +53,7 @@ int main(int argc, char** argv) {
         // Split the size values string on white space to isolate numeric strings.
         num_layers = str_split(layer_sizes_line, line_size, DEFAULT_NUM_LAYERS, WHITESPACE, WHITESPACE_COUNT, &layer_str_sizes);
         if (num_layers == -1) {
-            perror("from main(), str_split() error");
+            fprintf(stderr, "from main(), str_split() error");
             free(input_csv);
             return 1;
         }
@@ -67,7 +67,7 @@ int main(int argc, char** argv) {
     // Convert the given CSV file to a matrix of doubles, so each row represents a feature vector.
     const int num_feature_vectors = csv_to_matrix(input_csv, 1, 30, 10, &features, &feature_lengths);
     if (num_feature_vectors == -1) {
-        perror("from main(), csv_to_matrix() error");
+        fprintf(stderr, "from main(), csv_to_matrix() error");
         return 1;
     }
 
@@ -78,7 +78,7 @@ int main(int argc, char** argv) {
     // Create an array of integers to store layer size values.
     unsigned int *layer_sizes = malloc(num_layers*sizeof(unsigned int));
     if (!layer_sizes) {
-        perror("from main(), allocation error");
+        fprintf(stderr, "from main(), allocation error");
         free(input_csv);
         free_2d_carr(layer_str_sizes, num_layers);
         return 1;
@@ -89,7 +89,7 @@ int main(int argc, char** argv) {
     for (int i = 0; i < num_layers; i++) {
         conversion_error = str_to_uint(layer_str_sizes[i], &(layer_sizes[i]));
         if (conversion_error == -1) {
-            perror("from main(), invalid layer size specification\n");
+            fprintf(stderr, "from main(), invalid layer size specification\n");
             free_ptrs(input_csv, layer_sizes, NULL);
             free_2d_carr(layer_str_sizes, num_layers);
             return 1;
