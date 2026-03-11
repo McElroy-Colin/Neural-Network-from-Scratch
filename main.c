@@ -5,6 +5,9 @@
 #include "constants.h"
 #include "memory_utils.h"
 
+#include "neural_net.h"
+#include "activation_functions.h"
+
 // Take command line or runtime user input and construct a feed-forwad neural network.
 int main(int argc, char** argv) {
     char **layer_str_sizes;
@@ -100,54 +103,62 @@ int main(int argc, char** argv) {
         free_2d_carr(layer_str_sizes, num_layers);
     }
 
-    /*
     // TEST: 5 (in) -> 7 -> 4 -> 2 (out)
 
-    const double w1[7*5] = {
+    const double weights[7*5 + 4*7 + 2*4] = {
+
+        // layer input -> 1 7x5
+
         2.4, 43.6, 32.34, 8.454, 45.352,
         2.4, 44, 32.34, 8.5, 45.352,
         2.4, 43.6, 32.34, 8.454, 45.352,
         2.4, 43.6, 32.34, 8.454, 45.352,
         2.4, 43.6, 32.34, 8.454, 45.352,
         2.4, 43.6, 32.34, 8.454, 45.352,
-        2.4, 43.6, 32.34, 8.454, 45.352
-    };
+        2.4, 43.6, 32.34, 8.454, 45.352,
 
-    const double b1[7] = {2.4, 43.6, 32.34, 8.454, 45.352, 3.54, 3.561};
+        // layer 1 -> 2 4x7
 
-    const double w2[4*7] = {
         2.4, 43.6, 32.34, 8.454, 45.352, 3.24, 4.213,
         2.4, 43.6, 32.34, 8.454, 45.352, 3.24, 4.213,
         2.4, 43.6, 32.34, 8.454, 45.352, 3.24, 4.213,
-        2.4, 43.6, 32.34, 8.45, 45.352, 3.24, 4.213
-    };
+        2.4, 43.6, 32.34, 8.45, 45.352, 3.24, 4.213,
 
-    const double b2[4] = {2.4, 43.6, 32.34, 8.454};
+        // layer 2 -> 3 2x4
 
-    const double w3[2*4] = {
         2.4, 43.6, 32.34, 8.454,
         2.4, 43.6, 32.34, 8.454
     };
 
-    const double b3[2] = {3.54, 3.561};
+    const double biases[7 + 4 + 2] = {
+        2.4, 43.6, 32.34, 8.454, 45.352, 3.54, 3.561,
 
-    const double *weights[3] = {
-        w1, w2, w3
+        2.4, 43.6, 32.34, 8.454,
+
+        3.54, 3.561
     };
 
-    const double *biases[3] = {
-        b1, b2, b3
-    };
+    // Assume the CSV contained vectors of the same length.
+    const unsigned int num_features = feature_lengths[0];
 
-    activation_func funcs[3] = {test_func, test_func, test_func};
+    // Compute layer offsets before executing the network. Assume at lease 2 layers.
+    unsigned int *layer_offsets[num_layers];
+    layer_offsets[0] = 0;
+    layer_offsets[1] = num_features*layer_sizes[1];
+    for (int i = 2; i < num_layers; i++) {
+        layer_offsets[i] = layer_offsets[i - 1] + layer_sizes[i - 1]*layer_sizes[i];
+    }
+
+    ActivationFunc funcs[3] = {TEST, TEST, TEST};
 
     double **outputs = malloc(sizeof(double *)*num_feature_vectors);
     for (int i = 0; i < num_feature_vectors; i++) {
-        feed_forward(
+        feed_forward_srl(
             features[i], 
-            feature_lengths[i], 
+            num_features, 
             layer_sizes, 
             num_layers,
+            layer_offsets,
             arr_max(layer_sizes, num_layers),
             funcs,
             weights,
@@ -159,7 +170,6 @@ int main(int argc, char** argv) {
     }
 
     free_2d_darr(outputs, num_feature_vectors);
-    */
 
     free_ptrs(layer_sizes, feature_lengths, NULL);
     free_2d_darr(features, num_feature_vectors);

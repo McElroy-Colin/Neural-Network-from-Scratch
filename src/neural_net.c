@@ -13,14 +13,15 @@ int feed_forward_srl(
     const unsigned int num_features, 
     const unsigned int *layers, 
     const unsigned int num_layers,
+    const unsigned int *layer_offsets,
     const unsigned int max_layer_size,
     const ActivationFunc *activation_fns,
-    const double **weights,
-    const double **biases,
+    const double *weights,
+    const double *biases,
     double **output
 ) {
     // TODO: This can potentially be moved outside of the function call?
-    if (!features || !layers || !activation_fns || !weights || !(*weights) || !biases || !(*biases)) {
+    if (!features || !layers || !activation_fns || !weights || !biases) {
         fprintf(stderr, "from feed_forward_srl(), uninitialized input pointers\n");
         return -1;
     }
@@ -45,10 +46,9 @@ int feed_forward_srl(
 
     // Outer loop goes through one layer at a time, updating buffers with each neuron's activated output.
     for (int l = 0; l < num_layers; l++) {
-        const double *curr_weights = weights[l];
-        const double *curr_biases = biases[l];
         ActivationFunc curr_activation = activation_fns[l];
         unsigned int curr_neurons_out = layers[l];
+        unsigned int curr_layer_offset = layer_offsets[l];
         unsigned int curr_row = 0;
 
         // Inner loop goes through each neuron in the current layer. 
@@ -57,9 +57,9 @@ int feed_forward_srl(
 
             // Innermost loop goes through output from each neuron in the previous layer and computes intermediate weighted sum.
             for (int i = 0; i < curr_neurons_in; i++) {
-                z += curr_weights[curr_row + i]*layer_input[i];
+                z += weights[curr_layer_offset + curr_row + i]*layer_input[i];
             }
-            z += curr_biases[n];
+            z += biases[curr_neurons_out + n];
 
             curr_row += curr_neurons_in;
             // Pass the current neuron's weighted sum to the current layer's activation function.
@@ -78,7 +78,8 @@ int feed_forward_srl(
     // Since we swap buffers after each layer, the layer_input pointer actually points to the output of the final layer.
     *output = layer_input;
 
-    // TODO: Wrap the output buffer, since it is only length layers[num_layers - 1] and layer_input is length largest_layer_size
+    // TODO: Wrap the output buffer, since it is only length layers[num_layers - 1] and layer_input is length largest_layer_size.
+    //       Better to do this outside the function.
 
     free(layer_output);
     return 0;
