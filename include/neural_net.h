@@ -47,29 +47,40 @@ int feed_forward_srl(const double *features,
 Copy the given neural network to the GPU.
 
 Parameters:
+    `features`: Input feature vector (input) TODO: Might not want that here?
     `num_features`: Length of feature vectors for this neural network. Essentially the size of the first layer. (input)
-    `layers`: array of layer sizes where the size of the array is the number of layers excluding the input vector (input)
-                e.g. If `layers[2]` is 5, then the THIRD layer after input has FIVE neurons.
     `num_layers`: number of layers in the network excluding an input vector; also the length of `layers` (input)
+    `layer_offsets`: array containing the offset value for each layer of the network.
+        e.g. if `layer_offsets[2]` was `256`, then `weights[256]` would be the first weight of layer 1.
     `activation_fns`: An array of function enum values spercifying the activation for its respective layer,
                     so `activation_fns` is also length `num_layers`. (input)
                         e.g. If `activation_fns[3]` references a sigmoid function, then layer FOUR will use sigmoid on its neurons.
-    `weights`: An array of flattened weight matrices where each matrix applies to its respective layer. So `weights` is also length `num_layers`. (input)
-    `biases`: An array of bias vectors where each vector applies to its respective layer, i.e. `biases` is also length `num_layers`. (input)
-                e.g. If `biases[2][6]` is 3.4, then the SEVENTH neuron of layer THREE will use bias 3.4.
+    `weights`: An array of flattened weight matrices where each matrix applies to its respective layer. So, the first `num_features*layers[0]` values
+               in `weights` correspond to the matrix connecting the feature vector to the first hidden layer of the neural network. (input)
+    `num_weights`: Total number of weights in the network. (input)
+    `biases`: An array of flattened bias vectors where each vector applies to its respective layer. (input)
+                e.g. The first `layers[0]` values of `biases` correspond to the biases for the first layer of the network. (input)
+    `num_biases`: Total number of biases in the network. (input)
     `gpu_weights`: Unallocated pointer that will point to the first weight stored in the GPU. (output)
     `gpu_biases`: Unallocated pointer that will point to the first bias stored in the GPU. (output)
+    `gpu_layer_offsets`: Unallocated pointer that will point to the first layer offset value stored in the GPU. (output)
 
 Returns -1 on error, otherwise 0.
 */
-int nn_load_gpu(const unsigned int num_features,
-    const unsigned int *layers, 
+int nn_load_gpu(const double *features,
+    const unsigned int num_features,
     const unsigned int num_layers,
+    const unsigned int *layer_offsets,
     const ActivationFunc *activation_fns,
-    const double **weights, 
-    const double **biases,
-    double ***gpu_weights,
-    double ***gpu_biases
+    const double *weights, 
+    const unsigned int num_weights,
+    const double *biases,
+    const unsigned int num_biases,
+    double **gpu_features,
+    double **gpu_weights,
+    double **gpu_layer_offsets,
+    double **gpu_biases,
+    ActivationFunc **gpu_activation_fns
 );
 
 #endif
