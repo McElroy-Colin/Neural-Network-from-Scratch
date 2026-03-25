@@ -7,11 +7,12 @@
 #include "constants.h"
 
 
-__device__ void gpu_matrix_multiply(
+__global__ void gpu_matrixvector_mad(
     const double *A, 
     const unsigned int num_rows, 
     const unsigned int num_cols, 
     const double *x, 
+    const double *y,
     double *output) {
     
     // Designate a tile of shared memory for the vector.
@@ -42,8 +43,8 @@ __device__ void gpu_matrix_multiply(
         __syncthreads(); // Ensure all threads are done using shared memory
     }
 
-    // Write result to global memory
+    // Add the addition vector and write result to global memory
     if (row < num_rows) {
-        output[row] = sum;
+        output[row] = sum + y[row];
     }
 }

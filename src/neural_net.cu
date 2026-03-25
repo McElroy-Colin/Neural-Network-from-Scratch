@@ -7,6 +7,7 @@
 
 #include "memory_utils.h"
 #include "neural_net.h"
+#include "compute_utils.h"
 
 
 __global__ void compute_feed_forward(const double *features,
@@ -31,11 +32,10 @@ int feed_forward_krnl(const double *features,
     const ActivationFunc *activation_fns,
     const double *gpu_weights, 
     const double *gpu_biases,
-    double *buffer1,
-    double *buffer2,
+    double *buffer1, double *buffer2,
     double **output
 ) {
-    // TODO: gpu feed_forward using gpu_matrix_multiply
+    // TODO: gpu feed_forward using gpu_matrixvector_mad
 }
 
 int nn_load_gpu(const unsigned int num_layers,

@@ -11,10 +11,10 @@
 
 
             /*      GPU Constants       */
-#define TILE_SIZE 256
+#define TILE_SIZE 32
     // Should be a multiple of 32 to avoid a partially-filled warp of threads.
     // Depends on shared memory space per SM, usually 48 KB at 8 bytes per double.
-    // 256 is a good option.
+    // 256 is too large?
 
 
             /*      Input Messages       */

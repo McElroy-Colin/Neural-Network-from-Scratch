@@ -14,14 +14,13 @@ int feed_forward_srl(
     const unsigned int *layers, 
     const unsigned int num_layers,
     const unsigned int *layer_offsets,
-    const unsigned int max_layer_size,
     const ActivationFunc *activation_fns,
     const double *weights,
     const double *biases,
-    double *buffer1,
-    double *buffer2,
+    double *buffer1, double *buffer2,
     double **output
 ) {
+    // TODO: The function could start with `buffer1` already holding the feature vector, then no `features` and `num_features` would be needed.
     unsigned int curr_neurons_in = num_features;
     memcpy(buffer1, features, num_features*sizeof(double));
 

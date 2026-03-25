@@ -159,10 +159,10 @@ int main(int argc, char** argv) {
             layer_sizes, 
             num_layers,
             layer_offsets,
-            arr_max(layer_sizes, num_layers),
             funcs,
             weights,
             biases,
+            buffer1, buffer2, // for next time...
             &outputs[i]
         );
 
