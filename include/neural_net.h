@@ -6,7 +6,7 @@
 #include "activation_functions.h"
 
 /*
-Perform a serial feed-forward dense neural network computation given relevant parameters.
+Perform a feed-forward dense neural network computation given relevant parameters.
 Note the `srl` (CPU) and `krnl` (GPU) versions of this function.
 This function assumes that all vector/matrix dimensionality is correct. 
     e.g. weight matrices should have the correct dimensionality for their previous and current layer sizes.
@@ -27,6 +27,7 @@ Parameters:
                in weights correspond to the matrix connecting the feature vector to the first hidden layer of the neural network. (input)
     `biases`: A flattened array of bias vectors where each vector applies to its respective layer, i.e. the first `layers[0]` of `biases` corresponds
               to the biases for the neuron values in the first layer. (input)
+    `buffer1/2`: Buffers large enough to hold any given layer of the network. (input)
     `output`: Pointer to an array to hold the final output of the neural network. `*output` should be length `layers[num_layers - 1]`. (output) 
 
 Returns -1 on error, otherwise 0.
@@ -40,15 +41,30 @@ int feed_forward_srl(const double *features,
     const ActivationFunc *activation_fns,
     const double *weights, 
     const double *biases,
+    double *buffer1,
+    double *buffer2,
+    double **output
+);
+
+// Kernel version of the serial feed-forward function.
+int feed_forward_krnl(const double *features,
+    const unsigned int num_features,  
+    const unsigned int *layers, 
+    const unsigned int num_layers,
+    const unsigned int *layer_offsets,
+    const unsigned int max_layer_size,
+    const ActivationFunc *activation_fns,
+    const double *gpu_weights, 
+    const double *gpu_biases,
+    double *buffer1,
+    double *buffer2,
     double **output
 );
 
 /*
-Copy the given neural network to the GPU.
+Copy the given neural network to the GPU and assign output pointers to the GPU memory locations.
 
 Parameters:
-    `features`: Input feature vector (input) TODO: Might not want that here?
-    `num_features`: Length of feature vectors for this neural network. Essentially the size of the first layer. (input)
     `num_layers`: number of layers in the network excluding an input vector; also the length of `layers` (input)
     `layer_offsets`: array containing the offset value for each layer of the network.
         e.g. if `layer_offsets[2]` was `256`, then `weights[256]` would be the first weight of layer 1.
@@ -67,9 +83,7 @@ Parameters:
 
 Returns -1 on error, otherwise 0.
 */
-int nn_load_gpu(const double *features,
-    const unsigned int num_features,
-    const unsigned int num_layers,
+int nn_load_gpu(const unsigned int num_layers,
     const unsigned int *layer_offsets,
     const ActivationFunc *activation_fns,
     const double *weights, 

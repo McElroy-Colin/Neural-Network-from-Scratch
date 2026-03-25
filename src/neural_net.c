@@ -18,31 +18,12 @@ int feed_forward_srl(
     const ActivationFunc *activation_fns,
     const double *weights,
     const double *biases,
+    double *buffer1,
+    double *buffer2,
     double **output
 ) {
-    // TODO: This can potentially be moved outside of the function call?
-    if (!features || !layers || !activation_fns || !weights || !biases) {
-        fprintf(stderr, "from feed_forward_srl(), uninitialized input pointers\n");
-        return -1;
-    }
-
-    // Allocate two buffers, each able to hold any given layer at a time.
-    // TODO: Move this outside of the function call!
-    const unsigned int largest_layer_size = (max_layer_size > num_features) ? max_layer_size : num_features;
-    double *layer_input = malloc(largest_layer_size*sizeof(double));
-    if (!layer_input) {
-        fprintf(stderr, "from feed_forward_srl(), allocation error");
-        return -1;
-    }
-    double *layer_output = malloc(largest_layer_size*sizeof(double));
-    if (!layer_output) {
-        fprintf(stderr, "from feed_forward_srl(), allocation error");
-        free(layer_input);
-        return -1;
-    }
-
     unsigned int curr_neurons_in = num_features;
-    memcpy(layer_input, features, num_features*sizeof(double));
+    memcpy(buffer1, features, num_features*sizeof(double));
 
     // Outer loop goes through one layer at a time, updating buffers with each neuron's activated output.
     for (int l = 0; l < num_layers; l++) {
@@ -57,30 +38,29 @@ int feed_forward_srl(
 
             // Innermost loop goes through output from each neuron in the previous layer and computes intermediate weighted sum.
             for (int i = 0; i < curr_neurons_in; i++) {
-                z += weights[curr_layer_offset + curr_row + i]*layer_input[i];
+                z += weights[curr_layer_offset + curr_row + i]*buffer1[i];
             }
             z += biases[curr_neurons_out + n];
 
             curr_row += curr_neurons_in;
             // Pass the current neuron's weighted sum to the current layer's activation function.
-            layer_output[n] = activation_func_srl(z, curr_activation);
+            buffer2[n] = activation_func_srl(z, curr_activation);
         }
 
         // After each layer, swap the input and output buffers so that the next layer's input is the current layer's output.
         // Output buffer must also be swapped to avoid writing over input data for the next layer.
-        double *temp = layer_input;
-        layer_input = layer_output;
-        layer_output = temp;
+        double *temp = buffer1;
+        buffer1 = buffer2;
+        buffer2 = temp;
         
         curr_neurons_in = curr_neurons_out;
     }
 
-    // Since we swap buffers after each layer, the layer_input pointer actually points to the output of the final layer.
-    *output = layer_input;
+    // Since we swap buffers after each layer, the buffer1 pointer actually points to the output of the final layer.
+    *output = buffer1;
 
-    // TODO: Wrap the output buffer, since it is only length layers[num_layers - 1] and layer_input is length largest_layer_size.
+    // TODO: Wrap the output buffer, since it is only length layers[num_layers - 1] and buffer1 is length largest_layer_size.
     //       Better to do this outside the function.
 
-    free(layer_output);
     return 0;
 }

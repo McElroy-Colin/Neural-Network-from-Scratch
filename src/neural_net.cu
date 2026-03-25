@@ -22,9 +22,23 @@ __global__ void compute_feed_forward(const double *features,
 
 }
 
-int nn_load_gpu(const double *features,
-    const unsigned int num_features,
+int feed_forward_krnl(const double *features,
+    const unsigned int num_features,  
+    const unsigned int *layers, 
     const unsigned int num_layers,
+    const unsigned int *layer_offsets,
+    const unsigned int max_layer_size,
+    const ActivationFunc *activation_fns,
+    const double *gpu_weights, 
+    const double *gpu_biases,
+    double *buffer1,
+    double *buffer2,
+    double **output
+) {
+    // TODO: gpu feed_forward using gpu_matrix_multiply
+}
+
+int nn_load_gpu(const unsigned int num_layers,
     const unsigned int *layer_offsets,
     const ActivationFunc *activation_fns,
     const double *weights,
@@ -37,29 +51,10 @@ int nn_load_gpu(const double *features,
     double **gpu_biases,
     ActivationFunc **gpu_activation_fns
 ) {
-    // TODO: This can potentially be moved outside of the function call?
-    if ((!features) || (!layer_offsets) || (!activation_fns) || (!weights) || (!biases)) {
-        fprintf(stderr, "from nn_load_gpu(), uninitialized input pointer\n");
-        return -1;
-    }
-
     // Assume the entire network can fit on GPU memory (for now)...
-    // Copy structure, features, weights, and biases to the GPU.
-    
-    cudaError_t err = cudaMalloc(gpu_features, num_features*sizeof(double));
-    if (err != cudaSuccess) {
-        fprintf(stderr, "from nn_load_gpu(), cuda allocation error");
-        return -1;
-    }
+    // Copy structure, weights, and biases to the GPU.
 
-    err = cudaMemcpy(*gpu_features, features, num_features*sizeof(double), cudaMemcpyHostToDevice);
-    if (err != cudaSuccess) {
-        fprintf(stderr, "from nn_load_gpu(), cuda allocation error");
-        cudaFree(*gpu_features);
-        return -1;
-    }
-
-    err = cudaMalloc(gpu_weights, num_weights*sizeof(double));
+    cudaError_t err = cudaMalloc(gpu_weights, num_weights*sizeof(double));
     if (err != cudaSuccess) {
         fprintf(stderr, "from nn_load_gpu(), cuda allocation error");
         cudaFree(*gpu_features);
@@ -109,7 +104,7 @@ int nn_load_gpu(const double *features,
         return -1;
     }
 
-    // Return with the gpu buffers assinged.
+    // Return with the gpu buffers assigned.
 
     return 0;
 }
