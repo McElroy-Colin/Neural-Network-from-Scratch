@@ -6,7 +6,6 @@
 #include "compute_utils.h"
 #include "constants.h"
 
-
 __global__ void gpu_matrixvector_mad(
     const double *A, 
     const unsigned int num_rows, 
@@ -16,6 +15,7 @@ __global__ void gpu_matrixvector_mad(
     double *output) {
     
     // Designate a tile of shared memory for the vector.
+    // TODO: this can be moved outside of the kernel, i.e. it can be initialized pre-function call.
     __shared__ double tile[TILE_SIZE];
     
     unsigned int row = blockIdx.x*blockDim.x + threadIdx.x;

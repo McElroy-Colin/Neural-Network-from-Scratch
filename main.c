@@ -107,7 +107,7 @@ int main(int argc, char** argv) {
 
     const double weights[7*5 + 4*7 + 2*4] = {
 
-        // layer input -> 1 7x5
+        // input layer -> 1 7x5
 
         2.4, 43.6, 32.34, 8.454, 45.352,
         2.4, 44, 32.34, 8.5, 45.352,

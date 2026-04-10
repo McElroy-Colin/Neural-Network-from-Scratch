@@ -6,8 +6,7 @@
 #include "activation_functions.h"
 
 /*
-Perform a feed-forward dense neural network computation given relevant parameters.
-Note the `srl` (CPU) and `krnl` (GPU) versions of this function.
+Perform a serial feed-forward dense neural network computation given relevant parameters.
 This function assumes that all vector/matrix dimensionality is correct. 
     e.g. weight matrices should have the correct dimensionality for their previous and current layer sizes.
 
@@ -31,6 +30,7 @@ Parameters:
 
 Returns -1 on error, otherwise 0.
 */
+// TODO: change to hst and dvc
 int feed_forward_srl(const double *features,
     const unsigned int num_features,  
     const unsigned int *layers, 
@@ -43,8 +43,33 @@ int feed_forward_srl(const double *features,
     double **output
 );
 
-// Kernel version of the serial feed-forward function.
-// Assume GPU pointers point to existing values in GPU memory. i.e. `nn_load_gpu` was called previously.
+/*
+Perform a feed-forward dense neural network computation given relevant parameters.
+Note the `srl` (CPU) and `krnl` (GPU) versions of this function.
+This function assumes that all vector/matrix dimensionality is correct. 
+    e.g. weight matrices should have the correct dimensionality for their previous and current layer sizes.
+
+Parameters:
+    `features`: input feature vector (input)
+    `num_features`: length of `features` (input)
+    `layers`: array of layer sizes where the size of the array is the number of layers excluding the input vector (input)
+                e.g. If `layers[2]` is 5, then the THIRD layer after input has FIVE neurons.
+    `num_layers`: number of layers in the network excluding an input vector; also the length of `layers` (input)
+    `layer_offsets`: array containing the offset value for each layer of the network.
+        e.g. if `layer_offsets[3]` was `256`, then `weights[256]` would be the first weight of layer 2.
+    `activation_fns`: An array of function enum values spercifying the activation for its respective layer,
+                    so `activation_fns` is also length `num_layers`. (input)
+                        e.g. If `activation_fns[3]` references a sigmoid function, then layer FOUR will use sigmoid on its neurons.
+    `gpu_weights`: An array of flattened weight matrices in GPU memory where each matrix applies to its respective layer. 
+                   So, the first `num_features*layers[0]` values in weights correspond to the matrix connecting the 
+                   feature vector to the first hidden layer of the neural network. (input)
+    `gpu_biases`: A flattened array of bias vectors in GPU memory where each vector applies to its respective layer, 
+                  i.e. the first `layers[0]` of `biases` corresponds to the biases for the neuron values in the first layer. (input)
+    `buffer1/2`: Buffers large enough to hold any given layer of the network including a feature vector. (input)
+    `output`: Pointer to an array to hold the final output of the neural network. `*output` should be length `layers[num_layers - 1]`. (output) 
+
+Returns -1 on error, otherwise 0.
+*/
 int feed_forward_krnl(const double *features,
     const unsigned int num_features,  
     const unsigned int *layers, 
