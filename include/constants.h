@@ -10,7 +10,7 @@
 #define DEFAULT_NUM_LAYERS 5
 
 
-            /*      GPU Constants       */
+            /*      device Constants       */
 #define TILE_SIZE 32
     // Should be a multiple of 32 to avoid a partially-filled warp of threads.
     // Depends on shared memory space per SM, usually 48 KB at 8 bytes per double.

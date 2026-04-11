@@ -1,7 +1,7 @@
 
 #include "activation_functions.h"
 
-double activation_func_srl(double x, const ActivationFunc func) {
+double activation_func_hst(double x, const ActivationFunc func) {
     switch (func) {
         case TEST:
             return x;

@@ -8,7 +8,7 @@
 #include "activation_functions.h"
 
 
-int feed_forward_srl(
+int feed_forward_hst(
     const double *features, 
     const unsigned int num_features, 
     const unsigned int *layers, 
@@ -43,7 +43,7 @@ int feed_forward_srl(
 
             curr_row += curr_neurons_in;
             // Pass the current neuron's weighted sum to the current layer's activation function.
-            buffer2[n] = activation_func_srl(z, curr_activation);
+            buffer2[n] = activation_func_hst(z, curr_activation);
         }
 
         // After each layer, swap the input and output buffers so that the next layer's input is the current layer's output.

@@ -1,12 +1,16 @@
-// Source file for GPU-specific computation functions.
+// Source file for device-specific computation functions.
 
-#include <stdarg.h> // needed?
+#include <stdarg.h> // TODO: needed?
 #include <cuda_runtime.h>
 
 #include "compute_utils.h"
 #include "constants.h"
 
-__global__ void gpu_matrixvector_mad(
+/*
+We want a kernel that does feed forward, not just the gpuy matrix multiply...
+*/
+
+__global__ void dvc_matrixvector_mad(
     const double *A, 
     const unsigned int num_rows, 
     const unsigned int num_cols, 
@@ -15,7 +19,6 @@ __global__ void gpu_matrixvector_mad(
     double *output) {
     
     // Designate a tile of shared memory for the vector.
-    // TODO: this can be moved outside of the kernel, i.e. it can be initialized pre-function call.
     __shared__ double tile[TILE_SIZE];
     
     unsigned int row = blockIdx.x*blockDim.x + threadIdx.x;

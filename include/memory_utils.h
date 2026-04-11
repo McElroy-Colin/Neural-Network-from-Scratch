@@ -11,7 +11,7 @@ array must be of length at least `num_allocated`.
 void free_2d_darr(double **arr, const unsigned int num_allocated);
 
 /*
-Free all allocated inner pointers of a 2D double array from GPU memory before freeing the outer pointer from GPU memory.
+Free all allocated inner pointers of a 2D double array from device memory before freeing the outer pointer from device memory.
 Array and `num_allocated` inner pointers must be dynamically allocated and the outer 
 array must be of length at least `num_allocated`.
 */
@@ -25,7 +25,7 @@ array must be of length at least `num_allocated`.
 void free_2d_carr(char **arr, const unsigned int num_allocated);
 
 /*
-Free each given pointer from the selected memory (cudafree for GPU).
+Free each given pointer from the selected memory (cudafree for device).
 This function assumes the given pointers are not null except the final argument.
 */
 void free_ptrs(void *p1, ...);

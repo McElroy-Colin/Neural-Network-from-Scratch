@@ -7,12 +7,12 @@ typedef enum {
 } ActivationFunc;
 
 // Perform the given activation on the given double and return the result.
-double activation_func_srl(double x, const ActivationFunc func);
+double activation_func_hst(double x, const ActivationFunc func);
 
-// GPU version...
+// device version...
 #ifdef __CUDACC__
 __device__
 #endif
-double activation_func_krnl(double x, const ActivationFunc func);
+double activation_func_dvc(double x, const ActivationFunc func);
 
 #endif
