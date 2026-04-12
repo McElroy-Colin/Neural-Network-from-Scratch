@@ -66,8 +66,8 @@ Parameters:
                feature vector to the first hidden layer of the neural network. (input)
     `biases`: A flattened array of bias vectors in device memory where each vector applies to its respective layer, 
                   i.e. the first `layers[0]` of `biases` corresponds to the biases for the neuron values in the first layer. (input)
-    `dvc_buffer1/2`: Buffers on the device large enough to hold any given layer of the network including a feature vector. (input)
-    `output`: Pointer to an array to hold the final output of the neural network. `*output` should be length `layers[num_layers - 1]`. (output) 
+    `dvc_buffer1/2`: Buffers on the device large enough to hold any given layer of the network including a feature vector.
+                     Note, `buffer1` holds the final output of the feed forward operation in device memory after the function call. (input/output)
 
 Returns -1 on error, otherwise 0.
 */
@@ -79,8 +79,7 @@ __global__ void feed_forward_dvc(const unsigned int num_features,
     const ActivationFunc *activation_fns,
     const double *weights, 
     const double *biases,
-    double *buffer1, double *buffer2,
-    double **output
+    double *buffer1, double *buffer2
 );
 
 #endif

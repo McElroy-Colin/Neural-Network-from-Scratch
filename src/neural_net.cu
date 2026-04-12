@@ -21,8 +21,7 @@ __global__ void feed_forward_dvc(const unsigned int num_features,
     const ActivationFunc *activation_fns,
     const double *weights, 
     const double *biases,
-    double *buffer1, double *buffer2,
-    double **output
+    double *buffer1, double *buffer2
 ) {
     // Designate a tile of shared memory for each active vector.
     __shared__ double tile[TILE_SIZE];
