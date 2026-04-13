@@ -1,37 +1,48 @@
 CC = gcc
+NVCC = nvcc
 
-CFLAGS = -lm -Iinclude -Wno-sign-compare 
-RLFLAGS = $(CFLAGS) -O3 -march=native
-DBGFLAGS = $(CFLAGS) -g -O0 -Wall -Wextra -Wpedantic 
+CFLAGS = -lm -I include -Wno-sign-compare -O3 -march=native
+NVCC_FLAGS = -I include -rdc=true
 
-SRCS = main.c $(wildcard src/*.c) $(wildcard utils/*.c)
+DBGFLAGS = $(CFLAGS) -g -O0 -Wall -Wextra -Wpedantic
 
-RL_OBJS = $(SRCS:.c=.o)
-DBG_OBJS = $(SRCS:.c=.dbg.o)
+# Default to cuda, override with: make BUILD=serial
+BUILD ?= cuda
 
-RL_TARGET = main.exe
-DBG_TARGET = main_dbg.exe
+MAIN = ff_test
 
-# Default target
-all: main main_dbg
+ifeq ($(BUILD), cuda)
+    CU_SRCS = $(MAIN).cu $(wildcard src/*.cu) $(wildcard utils/*.cu)
+    C_SRCS = $(wildcard utils/*.c)
+    TARGET = goat_program.exe
+else
+    C_SRCS = $(wildcard src/*.c) $(wildcard utils/*.c)
+    CU_SRCS =
+    TARGET = goat_program_serial.exe
+endif
 
-# Link object files to create executable
-main: $(RL_OBJS)
-	$(CC) $(RL_OBJS) $(CFLAGS) -o $(RL_TARGET)
-	rm -f $(RL_OBJS)
+C_OBJS = $(C_SRCS:.c=_c.o)
+CU_OBJS = $(CU_SRCS:.cu=_cu.o)
 
-main_dbg: $(DBG_OBJS)
-	$(CC) $(DBG_OBJS) $(DBGFLAGS) -o $(DBG_TARGET)
-	rm -f $(DBG_OBJS)
+all: main
 
-%.dbg.o: %.c
-	$(CC) $(DBGFLAGS) -c $< -o $@
+ifeq ($(BUILD), cuda)
+main: $(CU_OBJS) $(C_OBJS)
+	$(NVCC) $(NVCC_FLAGS) $^ -o $(TARGET)
+	rm -f $(C_OBJS) $(CU_OBJS)
+else
+main: $(C_OBJS)
+	$(CC) $(CFLAGS) $^ -o $(TARGET)
+	rm -f $(C_OBJS)
+endif
 
-%.o: %.c
-	$(CC) $(RLFLAGS) -c $< -o $@
+%_c.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
-# Clean generated files
+%_cu.o: %.cu
+	$(NVCC) $(NVCC_FLAGS) -c $< -o $@
+
 clean:
-	rm -f $(RL_OBJS) $(DBG_OBJS) $(RL_TARGET) $(DBG_TARGET)
+	rm -f $(C_OBJS) $(CU_OBJS) $(TARGET)
 
-.PHONY: all clean
+.PHONY: all clean main

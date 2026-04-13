@@ -45,15 +45,26 @@ int feed_forward_hst(const double *features,
 
 
 #ifdef __CUDACC__
+extern "C"
 /*
 Perform a parallel feed-forward dense neural network computation given on the device given relevant parameters.
 This function assumes that all vector/matrix dimensionality is correct. 
     e.g. weight matrices should have the correct dimensionality for their previous and current layer sizes.
+Assume that `buffer1` holds the initial feature vector on the device when the kernel launches.
+
+Grid distribution uses 3D cooperative loading with the `TILE_SIZE` constant in `constants.h`.
+`TILE_SIZE` determines the amount of any given vector that is loaded into an SM's shared memory at once.
+To call the kernel with the value `TILE_SIZE` and a maximum layer size of `n`, do
+    ```
+    dim3 num_blocks((n + TILE_SIZE - 1) / TILE_SIZE, 1); // ceiling division
+    dim3 threads_per_block(TILE_SIZE, TILE_SIZE);
+    feed_forward_dvc<<<num_blocks, threads_per_block>>>( ... );
+    ```
+Note, the `TILE_SIZE` threads in the y-dimension of each block are for cooperative loadng of any given layer into shared memory.
 
 Parameters:
-    `features`: input feature vector (input)
     `num_features`: length of `features` (input)
-    `layers`: array of layer sizes where the size of the array is the number of layers excluding the input vector (input)
+    `layers`: array of layer sizes in device memory where the size of the array is the number of layers excluding the input vector (input)
                 e.g. If `layers[2] = 5`, then the THIRD layer after input has FIVE neurons.
     `num_layers`: number of layers in the network excluding an input vector; also the length of `layers` (input)
     `layer_offsets`: array containing the offset value for each layer of the network. (input)
@@ -68,8 +79,6 @@ Parameters:
                   i.e. the first `layers[0]` of `biases` corresponds to the biases for the neuron values in the first layer. (input)
     `dvc_buffer1/2`: Buffers on the device large enough to hold any given layer of the network including a feature vector.
                      Note, `buffer1` holds the final output of the feed forward operation in device memory after the function call. (input/output)
-
-Returns -1 on error, otherwise 0.
 */
 __global__ void feed_forward_dvc(const unsigned int num_features,  
     const unsigned int *layers, 
@@ -88,8 +97,9 @@ __global__ void feed_forward_dvc(const unsigned int num_features,
 Copy the given neural network to the device and assign output pointers to the device memory locations.
 
 Parameters:
-    `max_layer`: Size of the largest layer in the network, including the input (feature) layer. (input)
+    `layers`: Array of layer sizes excluding the input (feature) layer. (input)
     `num_layers`: number of layers in the network excluding an input vector; also the length of `layers` (input)
+    `num_features`: The length of the intended feature vectors to be used as input to the neural network. (input)
     `layer_offsets`: array containing the offset value for each layer of the network.
         e.g. if `layer_offsets[2]` was `256`, then `weights[256]` would be the first weight of layer 1.
     `activation_fns`: An array of function enum values spercifying the activation for its respective layer,
@@ -101,6 +111,7 @@ Parameters:
     `biases`: An array of flattened bias vectors where each vector applies to its respective layer. (input)
                 e.g. The first `layers[0]` values of `biases` correspond to the biases for the first layer of the network. (input)
     `num_biases`: Total number of biases in the network. (input)
+    `dvc_layers`: Unallocated pointer that will point to the first layer size in device memory. (output)
     `dvc_weights`: Unallocated pointer that will point to the first weight stored in the device. (output)
     `dvc_biases`: Unallocated pointer that will point to the first bias stored in the device. (output)
     `dvc_layer_offsets`: Unallocated pointer that will point to the first layer offset value stored in the device. (output)
@@ -108,16 +119,18 @@ Parameters:
 
 Returns -1 on error, otherwise 0.
 */
-int nn_load_dvc(const unsigned int max_layer,
+int nn_load_dvc(const unsigned int *layers,
     const unsigned int num_layers,
+    const unsigned int num_features,
     const unsigned int *layer_offsets,
     const ActivationFunc *activation_fns,
     const double *weights,
     const unsigned int num_weights,
     const double *biases,
     const unsigned int num_biases,
+    unsigned int **dvc_layers,
     double **dvc_weights,
-    double **dvc_layer_offsets,
+    unsigned int **dvc_layer_offsets,
     double **dvc_biases,
     ActivationFunc **dvc_activation_fns,
     double **dvc_buffer1, double **dvc_buffer2

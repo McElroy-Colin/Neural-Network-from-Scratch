@@ -23,7 +23,7 @@ void free_ptrs(void *p1, ...) {
     va_list ptrs;
     void *curr_ptr = p1;
 
-    va_start(ptrs, curr_ptr);
+    va_start(ptrs, p1);
     while (curr_ptr != NULL) {
         free(curr_ptr);
         curr_ptr = va_arg(ptrs, void*);

@@ -11,8 +11,8 @@ double activation_func_hst(double x, const ActivationFunc func);
 
 // device version...
 #ifdef __CUDACC__
-__device__
+extern "C"
+__device__ double activation_func_dvc(double x, const ActivationFunc func);
 #endif
-double activation_func_dvc(double x, const ActivationFunc func);
 
 #endif
