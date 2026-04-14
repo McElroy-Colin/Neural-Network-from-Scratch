@@ -46,7 +46,7 @@ Return the size of the stored line (excluding null byte) or -1 on an error.
 int get_next_line(char **input, const unsigned int default_size, FILE *stream);
 
 /*
-Convert the given CSV file into a matrix of doubles, where each row represents one line in the CSV.
+Convert the given CSV file into a 2D matrix of doubles, where each row represents one line in the CSV.
 This function expects a CSV file consisting ONLY of floating point numbers. Error on any invalid characters/numbers.
 An empty line in the given CSV will halt processing at that line.
 

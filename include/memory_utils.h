@@ -11,13 +11,6 @@ array must be of length at least `num_allocated`.
 void free_2d_darr(double **arr, const unsigned int num_allocated);
 
 /*
-Free all allocated inner pointers of a 2D double array from device memory before freeing the outer pointer from device memory.
-Array and `num_allocated` inner pointers must be dynamically allocated and the outer 
-array must be of length at least `num_allocated`.
-*/
-void cudafree_2d_darr(double **arr, const unsigned int num_allocated);
-
-/*
 Free all allocated inner pointers of a 2D char array before freeing the outer pointer.
 Array and `num_allocated` inner pointers must be dynamically allocated and the outer 
 array must be of length at least `num_allocated`.
@@ -25,10 +18,10 @@ array must be of length at least `num_allocated`.
 void free_2d_carr(char **arr, const unsigned int num_allocated);
 
 /*
-Free each given pointer from the selected memory (cudafree for device).
+Free each given pointer from the host memory.
 This function assumes the given pointers are not null except the final argument.
 */
 void free_ptrs(void *p1, ...);
-void cudafree_ptrs(void *p1, ...);
+
 
 #endif

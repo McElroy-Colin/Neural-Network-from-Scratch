@@ -5,8 +5,9 @@
 
 #include <cuda_runtime.h>
 
-#include "memory_utils.h"
-#include "neural_net.h"
+#include "memory_utils.cuh"
+#include "neural_net.cuh"
+#include "activation_functions.cuh"
 #include "compute_utils.h"
 #include "constants.h"
 
@@ -128,6 +129,7 @@ int nn_load_dvc(const unsigned int *layers,
         return -1;
     }
 
+    // Compute the largest layer size, including the input (feature) layer.
     const unsigned int max_layer = max(arr_max(layers, num_layers), num_features);
 
     err = cudaMalloc(dvc_buffer1, max_layer*sizeof(double));
@@ -167,6 +169,13 @@ int nn_load_dvc(const unsigned int *layers,
 
 
     err = cudaMemcpy(*dvc_biases, biases, num_biases*sizeof(double), cudaMemcpyHostToDevice);
+    if (err != cudaSuccess) {
+        fprintf(stderr, "from nn_load_dvc(), cuda memory copy error");
+        cudafree_ptrs(*dvc_layers, *dvc_weights, *dvc_layer_offsets, *dvc_biases, *dvc_activation_fns, NULL);
+        return -1;
+    }
+
+    err = cudaMemcpy(*dvc_activation_fns, activation_fns, num_layers*sizeof(ActivationFunc), cudaMemcpyHostToDevice);
     if (err != cudaSuccess) {
         fprintf(stderr, "from nn_load_dvc(), cuda memory copy error");
         cudafree_ptrs(*dvc_layers, *dvc_weights, *dvc_layer_offsets, *dvc_biases, *dvc_activation_fns, NULL);

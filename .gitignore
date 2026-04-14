@@ -2,8 +2,8 @@
 notes.txt
 .vscode
 sample_data/
-*test.c
 *test*
+build/
 
 # Prerequisites
 *.d

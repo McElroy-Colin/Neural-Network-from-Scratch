@@ -2,7 +2,6 @@
 
 #include "compute_utils.h"
 
-
 unsigned int arr_max(const unsigned int *arr, const unsigned int size) {
     double curr_max = arr[0];
 

@@ -2,7 +2,7 @@
 #include <stdarg.h>
 #include <cuda_runtime.h>
 
-#include "memory_utils.h"
+#include "memory_utils.cuh"
 
 
 

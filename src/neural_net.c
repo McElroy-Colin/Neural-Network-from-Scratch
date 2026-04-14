@@ -17,8 +17,7 @@ int feed_forward_hst(
     const ActivationFunc *activation_fns,
     const double *weights,
     const double *biases,
-    double *buffer1, double *buffer2,
-    double **output
+    double *buffer1, double *buffer2
 ) {
     // TODO: The function could start with `buffer1` already holding the feature vector, then no `features` and `num_features` would be needed.
     unsigned int curr_neurons_in = num_features;
@@ -57,12 +56,28 @@ int feed_forward_hst(
         
         curr_neurons_in = curr_neurons_out;
     }
-
-    // Since we swap buffers after each layer, the buffer1 pointer actually points to the output of the final layer.
-    *output = buffer1;
-
     // TODO: Wrap the output buffer, since it is only length layers[num_layers - 1] and buffer1 is length largest_layer_size.
     //       Better to do this outside the function.
+
+    return 0;
+}
+
+
+int compute_layer_offsets(const unsigned int num_layers, 
+    const unsigned int num_features, 
+    const unsigned int *layer_sizes, 
+    unsigned int *layer_offsets
+) {
+    if (num_layers < 2) {
+        fprintf(stderr, "from compute_layer_offsets(), less than 2 layers\n");
+        return -1;
+    }
+
+    layer_offsets[0] = 0;
+    layer_offsets[1] = num_features*layer_sizes[1];
+    for (int i = 2; i < num_layers; i++) {
+        layer_offsets[i] = layer_offsets[i - 1] + layer_sizes[i - 1]*layer_sizes[i];
+    }
 
     return 0;
 }
