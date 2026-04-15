@@ -10,6 +10,7 @@ Perform a parallel feed-forward dense neural network computation given on the de
 This function assumes that all vector/matrix dimensionality is correct. 
     e.g. weight matrices should have the correct dimensionality for their previous and current layer sizes.
 Assume that `buffer1` holds the initial feature vector on the device when the kernel launches.
+Similarly, `buffer1` will hold the resulting output vector values when after the function call.
 
 Grid distribution uses 3D cooperative loading with the `TILE_SIZE` constant in `constants.h`.
 `TILE_SIZE` determines the amount of any given vector that is loaded into an SM's shared memory at once.
@@ -36,14 +37,14 @@ Parameters:
                feature vector to the first hidden layer of the neural network. (input)
     `biases`: A flattened array of bias vectors in device memory where each vector applies to its respective layer, 
                   i.e. the first `layers[0]` of `biases` corresponds to the biases for the neuron values in the first layer. (input)
-    `dvc_buffer1/2`: Buffers on the device large enough to hold any given layer of the network including a feature vector.
-                     Note, `buffer1` holds the final output of the feed forward operation in device memory after the function call. (input/output)
+    `buffer1/2`: Buffers on the device large enough to hold any given layer of the network including a feature vector. (input/output)
+                     `buffer1` also holds the initial feature vector before the function call as well as the output vector after the function call,
+                     both on device memory. 
 */
 __global__ void feed_forward_dvc(const unsigned int num_features,  
     const unsigned int *layers, 
     const unsigned int num_layers,
     const unsigned int *layer_offsets,
-    const unsigned int max_layer_size,
     const ActivationFunc *activation_fns,
     const double *weights, 
     const double *biases,

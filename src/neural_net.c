@@ -2,14 +2,13 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+//#include <string.h>
 
 #include "neural_net.h"
 #include "activation_functions.h"
 
 
-int feed_forward_hst(
-    const double *features, 
+int feed_forward_hst( 
     const unsigned int num_features, 
     const unsigned int *layers, 
     const unsigned int num_layers,
@@ -19,9 +18,7 @@ int feed_forward_hst(
     const double *biases,
     double *buffer1, double *buffer2
 ) {
-    // TODO: The function could start with `buffer1` already holding the feature vector, then no `features` and `num_features` would be needed.
     unsigned int curr_neurons_in = num_features;
-    memcpy(buffer1, features, num_features*sizeof(double));
     unsigned int total_neurons = 0;
 
     // Outer loop goes through one layer at a time, updating buffers with each neuron's activated output.
@@ -74,7 +71,7 @@ int compute_layer_offsets(const unsigned int num_layers,
     }
 
     layer_offsets[0] = 0;
-    layer_offsets[1] = num_features*layer_sizes[1];
+    layer_offsets[1] = num_features*layer_sizes[0];
     for (int i = 2; i < num_layers; i++) {
         layer_offsets[i] = layer_offsets[i - 1] + layer_sizes[i - 1]*layer_sizes[i];
     }

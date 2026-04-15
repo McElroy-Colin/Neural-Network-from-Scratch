@@ -90,7 +90,6 @@ int main(int argc, char** argv) {
             dvc_layers,
             3,
             dvc_layer_offsets,
-            7,
             dvc_activation_fns,
             dvc_weights,
             dvc_biases,

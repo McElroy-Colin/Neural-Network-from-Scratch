@@ -10,7 +10,8 @@
 Perform a serial feed-forward dense neural network computation on the host given relevant parameters.
 This function assumes that all vector/matrix dimensionality is correct. 
     e.g. weight matrices should have the correct dimensionality for their previous and current layer sizes.
-Note, the output values will be in `buffer1` after the function call.
+Assume that `buffer1` holds the initial feature vector before the function call.
+Similarly, `buffer1` will hold the resulting output vector values when after the function call.
 
 Parameters:
     `features`: input feature vector (input)
@@ -28,11 +29,11 @@ Parameters:
     `biases`: A flattened array of bias vectors where each vector applies to its respective layer, i.e. the first `layers[0]` of `biases` corresponds
               to the biases for the neuron values in the first layer. (input)
     `buffer1/2`: Buffers large enough to hold any given layer of the network including a feature vector. (input/output)
+                 `buffer1` also holds the initial feature vector before the function call as well as the output vector after the function call.
 
 Returns -1 on error, otherwise 0.
 */
-int feed_forward_hst(const double *features,
-    const unsigned int num_features,  
+int feed_forward_hst(const unsigned int num_features,  
     const unsigned int *layers, 
     const unsigned int num_layers,
     const unsigned int *layer_offsets,

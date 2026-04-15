@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <math.h>
 
 #include "text_utils.h"
@@ -162,8 +163,9 @@ int main(int argc, char** argv) {
     double *buffer2 = malloc(max_layer*sizeof(double));
 
     for (int i = 0; i < num_feature_vectors; i++) {
-        feed_forward_hst(
-            feature_matrix[i], 
+        memcpy(buffer1, feature_matrix[i], num_features*sizeof(double));
+
+        feed_forward_hst( 
             num_features, 
             layer_sizes, 
             num_layers,
