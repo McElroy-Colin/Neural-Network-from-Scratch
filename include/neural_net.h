@@ -43,25 +43,17 @@ int feed_forward_hst(const unsigned int num_features,
     double *buffer1, double *buffer2
 );
 
-
-
-/*
-Compute an array of layer offsets representing the number of weights up to a given layer in the neural network.
-    e.g. if `layer_offsets[2]` was `256`, then `weights[256]` would be the first weight of layer 1.
-
-Parameters:
-    `num_layers`: The number of layers in the neural network excluding the input (feature) layer. (input)
-    `num_features`: Length of the network's feature layer. (input)
-    `layer_sizes`: Array of integers representing the size of each layer, excluding the input (feature) layer. (input)
-    `layer_offsets`: Allocated buffer to be filled with the layer offset values. (output)
-
-    Returns -1 if there are not at least two layers, otherwise 0.
-*/
-int compute_layer_offsets(const unsigned int num_layers, 
-    const unsigned int num_features, 
-    const unsigned int *layer_sizes, 
-    unsigned int *layer_offsets
+// train da network
+int train(const unsigned int num_features,  
+    const unsigned int *layers, 
+    const unsigned int num_layers,
+    const unsigned int *layer_offsets,
+    const ActivationFunc *activation_fns,
+    const double *weights, 
+    const double *biases,
+    double *buffer1, double *buffer2,
+    const double *train_matrix, 
+    const double *test_matrix
 );
-
 
 #endif

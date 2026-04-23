@@ -60,21 +60,18 @@ int feed_forward_hst(
 }
 
 
-int compute_layer_offsets(const unsigned int num_layers, 
-    const unsigned int num_features, 
-    const unsigned int *layer_sizes, 
-    unsigned int *layer_offsets
+int train(const unsigned int num_features,  
+    const unsigned int *layers, 
+    const unsigned int num_layers,
+    const unsigned int *layer_offsets,
+    const ActivationFunc *activation_fns,
+    const double *weights, 
+    const double *biases,
+    double *buffer1, double *buffer2,
+    const double *train_matrix, 
+    const double *test_matrix
 ) {
-    if (num_layers < 2) {
-        fprintf(stderr, "from compute_layer_offsets(), less than 2 layers\n");
-        return -1;
-    }
-
-    layer_offsets[0] = 0;
-    layer_offsets[1] = num_features*layer_sizes[0];
-    for (int i = 2; i < num_layers; i++) {
-        layer_offsets[i] = layer_offsets[i - 1] + layer_sizes[i - 1]*layer_sizes[i];
-    }
-
-    return 0;
+    // Steps: 
+    
 }
+

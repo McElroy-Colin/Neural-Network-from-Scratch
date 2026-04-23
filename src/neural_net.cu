@@ -38,6 +38,7 @@ __global__ void feed_forward_dvc(const unsigned int num_features,
         for (unsigned int t = 0; t < (curr_neurons_in + TILE_SIZE - 1)/TILE_SIZE; ++t) {
             unsigned int curr_chunk = t*TILE_SIZE;
 
+            // TODO: reuse x dimension threads to load cooperatively, otherwise y dimension threads are wasted...
             // Load a tile of the current buffer into shared memory.
             unsigned int curr_x_index = curr_chunk + threadIdx.y;
             if ((curr_x_index < curr_neurons_in) && (threadIdx.x == 0)) {

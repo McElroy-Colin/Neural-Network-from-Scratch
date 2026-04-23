@@ -53,8 +53,21 @@ int main(int argc, char** argv) {
         3.54, 3.561
     };
 
+    double **feature_matrix;
+    unsigned int *feature_lengths;
+    
+    // Convert the given CSV file to a matrix of doubles, so each row represents a feature vector.
+    const int num_feature_vectors = csv_to_matrix("sample_data/floats.csv", 1, 30, 10, &feature_matrix, &feature_lengths);
+    if (num_feature_vectors == -1) {
+        fprintf(stderr, "from main(), csv_to_matrix() error");
+        return 1;
+    }
+
     const unsigned int layers[3] = {7, 4, 2};
-    const unsigned int layer_offsets[3] = {0, 7*5, 7*5+4*7};
+
+    unsigned int *layer_offsets = (unsigned int*)malloc(5*sizeof(unsigned int));
+    compute_layer_offsets(3, 5, layers, layer_offsets);
+
     const ActivationFunc activation_fns[3] = {RELU, RELU, RELU};
 
     unsigned int *dvc_layers, *dvc_layer_offsets;
@@ -65,17 +78,6 @@ int main(int argc, char** argv) {
 
     nn_load_dvc(layers, 3, 5, layer_offsets, activation_fns, weights, 7*5+4*7+2*4, biases, 7+4+2, 
                 &dvc_layers, &dvc_weights, &dvc_layer_offsets, &dvc_biases, &dvc_activation_fns, &buffer1, &buffer2);
-    
-    
-    double **feature_matrix;
-    unsigned int *feature_lengths;
-    
-    // Convert the given CSV file to a matrix of doubles, so each row represents a feature vector.
-    const int num_feature_vectors = csv_to_matrix("sample_data/floats.csv", 1, 30, 10, &feature_matrix, &feature_lengths);
-    if (num_feature_vectors == -1) {
-        fprintf(stderr, "from main(), csv_to_matrix() error");
-        return 1;
-    }
 
     dim3 num_blocks((max_layer + TILE_SIZE - 1) / TILE_SIZE);
     dim3 threads_per_block(TILE_SIZE, TILE_SIZE);
@@ -102,6 +104,6 @@ int main(int argc, char** argv) {
 
     cudafree_ptrs(dvc_weights, dvc_layer_offsets, dvc_biases, dvc_activation_fns, buffer1, buffer2, NULL);
     free_2d_darr(feature_matrix, num_feature_vectors);
-    free(output);
+    free_ptrs(output, layer_offsets, NULL);
     return 0;
 }

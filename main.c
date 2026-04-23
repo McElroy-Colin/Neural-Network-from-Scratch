@@ -19,6 +19,7 @@ int main(int argc, char** argv) {
     int cmd_line_csv = 0;
     int cmd_line_layers = 0;
 
+    /*
     if (argc > 1) {
         input_csv = argv[1];
         cmd_line_csv = 1;
@@ -105,6 +106,8 @@ int main(int argc, char** argv) {
         free_2d_carr(layer_str_sizes, num_layers);
     }
 
+    */
+
     /*
     This is where the neural net would be loaded in via a file of some kind. 
     For now, the neural net's values are just hard coded in.
@@ -145,7 +148,20 @@ int main(int argc, char** argv) {
         3.54, 3.561
     };
 
-    ActivationFunc funcs[4] = {RELU, RELU, RELU};
+    ActivationFunc funcs[3] = {RELU, RELU, RELU};
+
+    double **feature_matrix;
+    unsigned int *feature_lengths;
+    
+    // Convert the given CSV file to a matrix of doubles, so each row represents a feature vector.
+    const int num_feature_vectors = csv_to_matrix("sample_data/floats.csv", 1, 30, 10, &feature_matrix, &feature_lengths);
+    if (num_feature_vectors == -1) {
+        fprintf(stderr, "from main(), csv_to_matrix() error");
+        return 1;
+    }
+
+    unsigned int layer_sizes[3] = {7, 4, 2};
+    num_layers = 3;
 
     /*          ^^ hard coded network ^^            */
 
@@ -179,7 +195,9 @@ int main(int argc, char** argv) {
         printf("Output f%d: (%f, %f)\n", i + 1, buffer1[0], buffer1[1]);
     }
 
-    free_ptrs(layer_sizes, feature_lengths, layer_offsets, buffer1, buffer2, NULL);
+    // Free buffers allocated from command line input.
+    // free_ptrs(layer_sizes, feature_lengths, layer_offsets, buffer1, buffer2, NULL);
+    free_ptrs(feature_lengths, buffer1, buffer2, NULL);
     free_2d_darr(feature_matrix, num_feature_vectors);
     return 0;
 }
