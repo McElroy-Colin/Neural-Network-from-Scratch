@@ -27,6 +27,6 @@
             /*      General Constants      */
 
 #define WHITESPACE " \t\r\v\f" // TODO: include '\n'?
-#define WHITESPACE_COUNT 5
+#define WHITESPACE_COUNT 5 // length of above WHITESPACE string
 
 #endif

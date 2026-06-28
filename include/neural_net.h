@@ -43,6 +43,32 @@ int feed_forward_hst(const unsigned int num_features,
     double *buffer1, double *buffer2
 );
 
+// Compute and return the Mean-Squared Error (MSE) between two vectors `y` and `y_hat`.
+// This function assumes that both vectors are length `count`.
+double mean_squared_error(const double *y, 
+    const double *y_hat, 
+    const unsigned int count);
+
+/*
+Compute the MSE for a batch of train-test vector pairs. Store the results in the `errs` matrix.
+This function assumes that each vector in the `ys` and `y_hats` matrices is length `count_per_vec`, and 
+that there are `count_per_vec*num_vecs` total elements in each.
+
+Parameters:
+    `ys`: Row-major matrix of true label vectors, where each `count_per_vec` elements is a vector with
+          a total of `num_vecs` vectors. (input)
+    `y_hats`: Same as `ys`, but for observed vectors. (input)
+    `count_per_vec`: Length of each vector in the above matrices. (input)
+    `num_vecs`: Number of vectors in the above matrices. (input)
+    `errs`: Allocated vector of length `num_vecs` to hold each MSE value. (output)
+
+*/
+void batch_mse(const double *ys, 
+    const double *y_hats, 
+    const unsigned int count_per_vec,
+    const unsigned int num_vecs,
+    double *errs);
+
 // train da network
 int train(const unsigned int num_features,  
     const unsigned int *layers, 

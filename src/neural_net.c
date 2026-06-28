@@ -60,18 +60,61 @@ int feed_forward_hst(
 }
 
 
-int train(const unsigned int num_features,  
-    const unsigned int *layers, 
-    const unsigned int num_layers,
-    const unsigned int *layer_offsets,
-    const ActivationFunc *activation_fns,
-    const double *weights, 
-    const double *biases,
-    double *buffer1, double *buffer2,
-    const double *train_matrix, 
-    const double *test_matrix
-) {
-    // Steps: 
+double mean_squared_error(const double *y, const double *y_hat, const unsigned int count) {
+        double sum = 0.0;
+        for (int i = 0; i < count; i++) {
+            double diff = y_hat[i] - y[i];
+            sum += diff*diff;
+        }
+
+        return sum / count;
+    }
+
+void batch_mse(const double *ys, 
+    const double *y_hats, 
+    const unsigned int count_per_vec,
+    const unsigned int num_vecs,
+    double *errs) {
     
+    for (int i = 0; i < num_vecs; i++) {
+        errs[i] = mean_squared_error(ys, y_hats, count_per_vec);
+    }
+
+    return;
+}
+
+
+int train(const unsigned int num_features,
+    const double *features,
+    const unsigned int batch_size
+    // ...
+) {
+    /* 
+    Steps: 
+        Test matrix has a corresponding matrix of output vectors. Take a portion of these pairs as
+        test elements and the rest as training.
+        Send a vector through feed forward, 
+    */
+
+    // Ceiling division
+    const unsigned int num_batches = (num_features + batch_size - 1) / batch_size;
+    
+    // Buffer to store outputs of a batch's forward pass.
+    double *y_hats = malloc(batch_size*sizeof(double)); // TODO: Include final layer size here...
+
+    // Outer loop sends batches of feature vectors.
+    for (int b = 0; b < num_batches; b++) {
+        
+        // Forward pass loop for the current batch.
+        for (int fp = 0; fp < batch_size; fp++) {
+            // ...
+        }
+    }
+
+
+
+
+
+    free(y_hats);
 }
 
