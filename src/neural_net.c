@@ -86,6 +86,10 @@ void batch_mse(const double *ys,
 
 int train(const unsigned int num_features,
     const double *features,
+    const unsigned int *layers,
+    const unsigned int num_layers,
+    const unsigned int max_layer_size, // includes feature vector
+    const unsigned int *layer_offsets,
     const unsigned int batch_size
     // ...
 ) {
@@ -93,21 +97,29 @@ int train(const unsigned int num_features,
     Steps: 
         Test matrix has a corresponding matrix of output vectors. Take a portion of these pairs as
         test elements and the rest as training.
-        Send a vector through feed forward, 
+        Send a vector through feed forward, get loss, do gradient for each different act func, backprop.
     */
 
     // Ceiling division
     const unsigned int num_batches = (num_features + batch_size - 1) / batch_size;
     
     // Buffer to store outputs of a batch's forward pass.
-    double *y_hats = malloc(batch_size*sizeof(double)); // TODO: Include final layer size here...
+    double *y_hats = malloc(batch_size*layers[num_layers - 1]*sizeof(double));
+    double *buffer1 = malloc(max_layer_size*sizeof(double));
+    double *buffer2 = malloc (max_layer_size*sizeof(double));
 
     // Outer loop sends batches of feature vectors.
     for (int b = 0; b < num_batches; b++) {
         
         // Forward pass loop for the current batch.
         for (int fp = 0; fp < batch_size; fp++) {
-            // ...
+            feed_forward_hst(num_features, 
+                layers, 
+                num_layers, 
+                layer_offsets,
+                // continue...);
+
+                // Store buffer1 (output) in y_hats for each forward pass of the batch...
         }
     }
 

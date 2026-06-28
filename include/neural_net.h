@@ -69,17 +69,4 @@ void batch_mse(const double *ys,
     const unsigned int num_vecs,
     double *errs);
 
-// train da network
-int train(const unsigned int num_features,  
-    const unsigned int *layers, 
-    const unsigned int num_layers,
-    const unsigned int *layer_offsets,
-    const ActivationFunc *activation_fns,
-    const double *weights, 
-    const double *biases,
-    double *buffer1, double *buffer2,
-    const double *train_matrix, 
-    const double *test_matrix
-);
-
 #endif
