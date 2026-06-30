@@ -117,9 +117,10 @@ int train(const unsigned int num_features,
                 layers, 
                 num_layers, 
                 layer_offsets,
-                // continue...);
+                // continue...
 
                 // Store buffer1 (output) in y_hats for each forward pass of the batch...
+            );
         }
     }
 

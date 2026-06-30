@@ -6,6 +6,50 @@
 #include "activation_functions.h"
 
 
+// Neural Network structure, containing all relevent network topology.
+typedef struct {
+    // Array of layer sizes where the size of the array is the number of layers, excluding the input vector, length 'num_layers'.
+    unsigned int *layers;
+
+    // An array of flattened row-major weight matrices where each matrix applies to its respective layer.
+    // So, the first `num_features*layers[0]` values in `weights` correspond to the matrix connecting the feature 
+    // vector to the first hidden layer of the neural network.
+    double *weights;
+
+    // A flattened array of bias vectors where each vector applies to its respective layer. 
+    //     i.e. the first `layers[0]` values in `biases` corresponds to the biases for the first hidden layer layer.
+    double *biases;
+
+    // An array containing the weight matrix offset value for each layer of the network.
+    //     e.g. if `weight_offsets[2]` was `256`, then `weights[256]` would be the first weight of the second hidden layer.
+    unsigned int *weight_offsets; // TODO: name change everywhere
+
+    // An array containing the bias vector offset value for each layer of the network.
+    //     e.g. if `bias_offsets[2]` was `96`, then `biases[96]` would be the first bias of the second hidden layer.
+    unsigned int *bias_offsets; // TODO: total_neurons in ff does this on the fly, slower...
+
+    // An array of function enum values specifying the activation for its respective layer, length 'num_layers'
+    //     e.g. If `activation_fns[3]` references a sigmoid function, then layer FOUR will use sigmoid.
+    ActivationFunc *activation_fns;
+
+    // Length of the input feature vector. This is NOT included in `layers`.
+    unsigned int num_features;
+    
+    // Number of layers in the network excluding the input vector but including the output vector.
+    unsigned int num_layers;
+
+    // Size of the largest layer in the network including the input and output vectors.
+    //     i.e. `max_layer_size = max(max(layers), num_features)`
+    unsigned int max_layer_size;
+
+    // Total number of weight values across all layers in the network.
+    unsigned int total_weights;
+
+    // Total number of bias values across all layers in the network. Also the total number of non-input neurons.
+    //     i.e. `total_biases = sum(layers)`
+    unsigned int total_biases;
+} NeuralNetwork;
+
 /*
 Perform a serial feed-forward dense neural network computation on the host given relevant parameters.
 This function assumes that all vector/matrix dimensionality is correct. 
@@ -17,9 +61,9 @@ Parameters:
     `features`: input feature vector (input)
     `num_features`: length of `features` (input)
     `layers`: array of layer sizes where the size of the array is the number of layers excluding the input vector (input)
-                e.g. If `layers[2]` is 5, then the THIRD layer after input has FIVE neurons.
+            e.g. If `layers[2]` is 5, then the THIRD layer after input has FIVE neurons.
     `num_layers`: number of layers in the network excluding an input vector; also the length of `layers` (input)
-    `layer_offsets`: array containing the offset value for each layer of the network.
+    `layer_offsets`: array containing the weight matrix offset value for each layer of the network.
         e.g. if `layer_offsets[2]` was `256`, then `weights[256]` would be the first weight of layer 1.
     `activation_fns`: An array of function enum values spercifying the activation for its respective layer,
                     so `activation_fns` is also length `num_layers`. (input)
