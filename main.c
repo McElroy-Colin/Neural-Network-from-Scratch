@@ -168,12 +168,35 @@ int main(int argc, char** argv) {
     // Assume the CSV contained vectors of the same length.
     const unsigned int num_features = feature_lengths[0];
 
-    // Get layer offset values.
-    unsigned int *layer_offsets = malloc(num_layers*sizeof(unsigned int));
-    compute_layer_offsets(num_layers, num_features, layer_sizes, layer_offsets);
+    // Get weight offset values.
+    unsigned int *weight_offsets = malloc(num_layers*sizeof(unsigned int));
+    compute_layer_offsets(num_layers, num_features, layer_sizes, weight_offsets);
+
+    unsigned int *bias_offsets= malloc(num_layers*sizeof(unsigned int));
+    unsigned int sum = 0;
+    for (int i = 0 ; i < num_layers; i++) {
+        bias_offsets[i] = sum;
+        sum += layer_sizes[i];
+    }
 
     unsigned int max_layer = arr_max(layer_sizes, num_layers);
     max_layer = max_layer > num_features ? max_layer : num_features;
+
+    // Construct the neural network object.
+    NeuralNetwork neural_net = {
+        .layers = layer_sizes,
+        .weights = weights,
+        .biases = biases,
+        .weight_offsets = weight_offsets,
+        .bias_offsets = bias_offsets,
+        .activation_fns = funcs,
+        .num_features = num_features,
+        .num_layers = num_layers,
+        .max_layer_size = max_layer,
+        .total_weights = 0, // TODO
+        .total_biases = 0 // TODO
+    };
+
 
     double *buffer1 = malloc(max_layer*sizeof(double));
     double *buffer2 = malloc(max_layer*sizeof(double));
@@ -181,14 +204,8 @@ int main(int argc, char** argv) {
     for (int i = 0; i < num_feature_vectors; i++) {
         memcpy(buffer1, feature_matrix[i], num_features*sizeof(double));
 
-        feed_forward_hst( 
-            num_features, 
-            layer_sizes, 
-            num_layers,
-            layer_offsets,
-            funcs,
-            weights,
-            biases,
+        feed_forward_hst(
+            &neural_net,
             buffer1, buffer2
         );
 
@@ -196,8 +213,8 @@ int main(int argc, char** argv) {
     }
 
     // Free buffers allocated from command line input.
-    // free_ptrs(layer_sizes, feature_lengths, layer_offsets, buffer1, buffer2, NULL);
-    free_ptrs(feature_lengths, buffer1, buffer2, NULL);
+    // free_ptrs(layer_sizes, feature_lengths, weight_offsets, buffer1, buffer2, NULL);
+    free_ptrs(feature_lengths, weight_offsets, buffer1, buffer2, NULL);
     free_2d_darr(feature_matrix, num_feature_vectors);
     return 0;
 }
