@@ -102,13 +102,7 @@ int main(int argc, char** argv) {
         cudaMemcpy(buffer1, feature_matrix[i], 5*sizeof(double), cudaMemcpyHostToDevice);
 
         feed_forward_dvc<<<num_blocks, threads_per_block>>>(
-            5,
-            dvc_layers,
-            3,
-            dvc_layer_offsets,
-            dvc_activation_fns,
-            dvc_weights,
-            dvc_biases,
+            shell_nn,
             buffer1, buffer2
         );
 
