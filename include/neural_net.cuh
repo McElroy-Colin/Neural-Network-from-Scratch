@@ -24,31 +24,13 @@ To call the kernel with the value `TILE_SIZE` and a maximum layer size of `n`, d
 Note, the `TILE_SIZE` threads in the y-dimension of each block are for cooperative loadng of any given layer into shared memory.
 
 Parameters:
-    `num_features`: length of `features` (input)
-    `layers`: array of layer sizes in device memory where the size of the array is the number of layers excluding the input vector (input)
-                e.g. If `layers[2] = 5`, then the THIRD layer after input has FIVE neurons.
-    `num_layers`: number of layers in the network excluding an input vector; also the length of `layers` (input)
-    `layer_offsets`: array containing the offset value for each layer of the network. (input)
-                        e.g. If `layer_offsets[3] = 256`, then `weights[256]` would be the first weight of layer 2.
-    `activation_fns`: An array of function enum values spercifying the activation for its respective layer,
-                      so `activation_fns` is also length `num_layers`. (input)
-                        e.g. If `activation_fns[3]` references a sigmoid function, then layer FOUR will use sigmoid on its neurons.
-    `weights`: An array of flattened weight matrices in device memory where each matrix applies to its respective layer. 
-               So, the first `num_features*layers[0]` values in weights correspond to the matrix connecting the 
-               feature vector to the first hidden layer of the neural network. (input)
-    `biases`: A flattened array of bias vectors in device memory where each vector applies to its respective layer, 
-                  i.e. the first `layers[0]` of `biases` corresponds to the biases for the neuron values in the first layer. (input)
+    `neural_net`: Initialized neural network object with entirely device pointers internally. (input)
     `buffer1/2`: Buffers on the device large enough to hold any given layer of the network including a feature vector. (input/output)
                      `buffer1` also holds the initial feature vector before the function call as well as the output vector after the function call,
                      both on device memory. 
 */
-__global__ void feed_forward_dvc(const unsigned int num_features,  
-    const unsigned int *layers, 
-    const unsigned int num_layers,
-    const unsigned int *layer_offsets,
-    const ActivationFunc *activation_fns,
-    const double *weights, 
-    const double *biases,
+__global__ void feed_forward_dvc(
+    NeuralNetwork neural_net,
     double *buffer1, double *buffer2
 );
 
