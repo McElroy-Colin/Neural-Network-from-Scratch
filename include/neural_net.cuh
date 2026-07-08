@@ -4,6 +4,7 @@
 
 
 #include "activation_functions.cuh"
+#include "neural_net.h"
 
 /*
 Perform a parallel feed-forward dense neural network computation given on the device given relevant parameters.
@@ -55,42 +56,15 @@ __global__ void feed_forward_dvc(const unsigned int num_features,
 Copy the given neural network to the device and assign output pointers to the device memory locations.
 
 Parameters:
-    `layers`: Array of layer sizes excluding the input (feature) layer. (input)
-    `num_layers`: number of layers in the network excluding an input vector; also the length of `layers` (input)
-    `num_features`: The length of the intended feature vectors to be used as input to the neural network. (input)
-    `layer_offsets`: array containing the offset value for each layer of the network.
-        e.g. if `layer_offsets[2]` was `256`, then `weights[256]` would be the first weight of layer 1.
-    `activation_fns`: An array of function enum values spercifying the activation for its respective layer,
-                    so `activation_fns` is also length `num_layers`. (input)
-                        e.g. If `activation_fns[3]` references a sigmoid function, then layer FOUR will use sigmoid on its neurons.
-    `weights`: An array of flattened weight matrices where each matrix applies to its respective layer. So, the first `num_features*layers[0]` values
-               in `weights` correspond to the matrix connecting the feature vector to the first hidden layer of the neural network. (input)
-    `num_weights`: Total number of weights in the network. (input)
-    `biases`: An array of flattened bias vectors where each vector applies to its respective layer. (input)
-                e.g. The first `layers[0]` values of `biases` correspond to the biases for the first layer of the network. (input)
-    `num_biases`: Total number of biases in the network. (input)
-    `dvc_layers`: Unallocated pointer that will point to the first layer size in device memory. (output)
-    `dvc_weights`: Unallocated pointer that will point to the first weight stored in the device. (output)
-    `dvc_biases`: Unallocated pointer that will point to the first bias stored in the device. (output)
-    `dvc_layer_offsets`: Unallocated pointer that will point to the first layer offset value stored in the device. (output)
+    `hst_neural_net`: Fully initialized neural network object in host memory. All values should be initialized and accurate. (input)
+    `shell_neural_net`: Uninitialized nerual network object in host memory. All internal pointers will point to device memory after the call. (input/output)
     `dvc_buffer1/2`: Buffers on the device large enough to hold any given layer of the network including a feature vector. (output)
 
 Returns -1 on error, otherwise 0.
 */
-int nn_load_dvc(const unsigned int *layers,
-    const unsigned int num_layers,
-    const unsigned int num_features,
-    const unsigned int *layer_offsets,
-    const ActivationFunc *activation_fns,
-    const double *weights,
-    const unsigned int num_weights,
-    const double *biases,
-    const unsigned int num_biases,
-    unsigned int **dvc_layers,
-    double **dvc_weights,
-    unsigned int **dvc_layer_offsets,
-    double **dvc_biases,
-    ActivationFunc **dvc_activation_fns,
+int nn_load_dvc(
+    NeuralNetwork *hst_neural_net,
+    NeuralNetwork *shell_neural_net,
     double **dvc_buffer1, double **dvc_buffer2
 );
 

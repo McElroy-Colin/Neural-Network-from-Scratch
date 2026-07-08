@@ -20,7 +20,7 @@ extern "C" {
 int main(int argc, char** argv) {
     // TEST: 5 (in) -> 7 -> 4 -> 2 (out)
 
-    const double weights[7*5 + 4*7 + 2*4] = {
+    double weights[7*5 + 4*7 + 2*4] = {
 
         // input layer -> 1 7x5
 
@@ -45,7 +45,7 @@ int main(int argc, char** argv) {
         2.4, 43.6, 32.34, 8.454
     };
 
-    const double biases[7 + 4 + 2] = {
+    double biases[7 + 4 + 2] = {
         2.4, 43.6, 32.34, 8.454, 45.352, 3.54, 3.561,
 
         2.4, 43.6, 32.34, 8.454,
@@ -63,21 +63,35 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    const unsigned int layers[3] = {7, 4, 2};
+    unsigned int layers[3] = {7, 4, 2};
+    const unsigned int max_layer = 7;
 
     unsigned int *layer_offsets = (unsigned int*)malloc(5*sizeof(unsigned int));
     compute_layer_offsets(3, 5, layers, layer_offsets);
 
-    const ActivationFunc activation_fns[3] = {RELU, RELU, RELU};
+    ActivationFunc activation_fns[3] = {RELU, RELU, RELU};
+
+    NeuralNetwork host_nn = {
+        .layers = layers,
+        .weights = weights,
+        .biases = biases,
+        .weight_offsets = layer_offsets,
+        .bias_offsets = 0, // TODO
+        .activation_fns = activation_fns,
+        .num_features = num_feature_vectors,
+        .num_layers = 3,
+        .max_layer_size = max_layer,
+        .total_weights = 7*5 + 4*7 + 2*4,
+        .total_biases = 7 + 4 + 2
+    };
 
     unsigned int *dvc_layers, *dvc_layer_offsets;
     double *dvc_weights, *dvc_biases, *buffer1, *buffer2;
     ActivationFunc *dvc_activation_fns;
 
-    const unsigned int max_layer = 7;
+    NeuralNetwork shell_nn;
 
-    nn_load_dvc(layers, 3, 5, layer_offsets, activation_fns, weights, 7*5+4*7+2*4, biases, 7+4+2, 
-                &dvc_layers, &dvc_weights, &dvc_layer_offsets, &dvc_biases, &dvc_activation_fns, &buffer1, &buffer2);
+    nn_load_dvc(&host_nn, &shell_nn, &buffer1, &buffer2);
 
     dim3 num_blocks((max_layer + TILE_SIZE - 1) / TILE_SIZE);
     dim3 threads_per_block(TILE_SIZE, TILE_SIZE);

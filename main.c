@@ -197,7 +197,6 @@ int main(int argc, char** argv) {
         .total_biases = 0 // TODO
     };
 
-
     double *buffer1 = malloc(max_layer*sizeof(double));
     double *buffer2 = malloc(max_layer*sizeof(double));
 
