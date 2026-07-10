@@ -16,20 +16,37 @@ unsigned int arr_max(const unsigned int *arr, const unsigned int size) {
     return curr_max;
 }
 
-int compute_layer_offsets(const unsigned int num_layers, 
+int compute_weight_offsets(const unsigned int num_layers, 
     const unsigned int num_features, 
-    const unsigned int *layer_sizes, 
-    unsigned int *layer_offsets
+    const unsigned int *layers, 
+    unsigned int *weight_offsets
 ) {
     if (num_layers < 2) {
-        fprintf(stderr, "from compute_layer_offsets(), less than 2 layers\n");
+        fprintf(stderr, "from compute_weight_offsets(), less than 2 layers\n");
         return -1;
     }
 
-    layer_offsets[0] = 0;
-    layer_offsets[1] = num_features*layer_sizes[0];
+    weight_offsets[0] = 0;
+    weight_offsets[1] = num_features*layers[0];
     for (int i = 2; i < num_layers; i++) {
-        layer_offsets[i] = layer_offsets[i - 1] + layer_sizes[i - 1]*layer_sizes[i];
+        weight_offsets[i] = weight_offsets[i - 1] + layers[i - 1]*layers[i];
+    }
+
+    return 0;
+}
+
+int compute_bias_offsets(const unsigned int num_layers, 
+    const unsigned int *layers, 
+    unsigned int *bias_offsets
+) {
+    if (num_layers < 1) {
+        fprintf(stderr, "from compute_bias_offsets(), 0 layers\n");
+        return -1;
+    }
+
+    bias_offsets[0] = 0;
+    for (int i = 1; i < num_layers; i++) {
+        bias_offsets[i] = layers[i - 1] + bias_offsets[i - 1];
     }
 
     return 0;

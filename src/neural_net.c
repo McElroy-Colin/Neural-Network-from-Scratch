@@ -8,7 +8,7 @@
 #include "activation_functions.h"
 
 
-int feed_forward_hst( 
+void feed_forward_hst( 
     const NeuralNetwork *neural_net, // could make it `const NeuralNetwork *restrict neural_net`
     double *buffer1, double *buffer2
 ) {

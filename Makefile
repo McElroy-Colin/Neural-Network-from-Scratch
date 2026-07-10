@@ -1,3 +1,5 @@
+# Usage: 
+
 CC = gcc
 NVCC = nvcc
 

@@ -6,7 +6,7 @@ This document examines the design and implementation of a feed-forward neural ne
 
 ### Flat Array Layout
 
-All weights and biases are stored in flat, contiguous arrays rather than as jagged 2D arrays or linked structures. Weight matrices are laid out row-major — the weights connecting layer `l-1` to layer `l` occupy a contiguous block of `layers[l] × layers[l-1]` doubles within the global `weights` array. A companion `layer_offsets` array (computed once by `compute_layer_offsets`) stores the starting index for each layer's weight block, making random access into any layer's weights O(1).
+All weights and biases are stored in flat, contiguous arrays rather than as jagged 2D arrays or linked structures. Weight matrices are laid out row-major — the weights connecting layer `l-1` to layer `l` occupy a contiguous block of `layers[l] × layers[l-1]` doubles within the global `weights` array. A companion `weight_offsetssss` array (computed once by `compute_weight_offsets`) stores the starting index for each layer's weight block, making random access into any layer's weights O(1).
 
 This layout was a deliberate choice to support both the host and device paths with the same memory representation: flat arrays transfer to device memory cleanly, avoid pointer indirection that CUDA kernels cannot follow, and are friendly to cache prefetchers on both CPU and GPU.
 
@@ -30,7 +30,7 @@ Biases are stored in a single flat array ordered by layer, with the first `layer
 
 **Zero-copy data layout.** The flat weight and bias arrays can be passed directly to `cudaMemcpy` without any reformatting. There is no marshalling step between the host and device paths.
 
-**Simple caller interface.** The caller is responsible for pre-computing `layer_offsets` and allocating the two buffers, but after that the forward pass is a single function call. The network's topology is fully described by the four arrays (`layers`, `layer_offsets`, `activation_fns`, weights/biases) and does not require a struct or object.
+**Simple caller interface.** The caller is responsible for pre-computing `weight_offsets` and allocating the two buffers, but after that the forward pass is a single function call. The network's topology is fully described by the four arrays (`layers`, `weight_offsets`, `activation_fns`, weights/biases) and does not require a struct or object.
 
 **Separation of structure from compute.** The forward pass functions are stateless and take everything they need as parameters. There is no global or hidden state, which makes the functions straightforward to test in isolation and easy to call repeatedly on different inputs without reinitializing any object.
 
@@ -38,11 +38,11 @@ Biases are stored in a single flat array ordered by layer, with the first `layer
 
 **No intermediate activations are retained.** Because buffers are swapped after every layer, the activation values from intermediate layers are overwritten. This makes backpropagation impossible with the current structure — a training pass would need to either cache each layer's output separately or recompute them during the backward pass.
 
-**Manual memory management at the call site.** The caller is responsible for allocating and freeing buffers, computing layer offsets, and ensuring all array sizes are consistent. There is no bounds checking or size validation inside the forward pass functions. A mismatch between the `layer_offsets` array and the actual weight layout will silently produce wrong results.
+**Manual memory management at the call site.** The caller is responsible for allocating and freeing buffers, computing layer offsets, and ensuring all array sizes are consistent. There is no bounds checking or size validation inside the forward pass functions. A mismatch between the `weight_offsets` array and the actual weight layout will silently produce wrong results.
 
 **Single-sample forward pass only.** The current interface processes one feature vector at a time. Batched inference (processing a matrix of samples in parallel) would require a significant rework of both the function signatures and the GPU kernel's thread distribution strategy.
 
-**`total_neurons` offset computation is coupled to the loop.** The bias indexing relies on `total_neurons` accumulating correctly across layers inside the loop body. This works correctly but means the offset logic is implicit rather than pre-computed (unlike weights, which have a dedicated `layer_offsets` array). A parallel `bias_offsets` array would make the structure more symmetric and self-documenting.
+**`total_neurons` offset computation is coupled to the loop.** The bias indexing relies on `total_neurons` accumulating correctly across layers inside the loop body. This works correctly but means the offset logic is implicit rather than pre-computed (unlike weights, which have a dedicated `weight_offsets` array). A parallel `bias_offsets` array would make the structure more symmetric and self-documenting.
 
 **Buffer ownership is ambiguous after the call.** Because the buffers are swapped an unknown number of times (once per layer), the result ends up in whichever buffer corresponds to the final swap state. The convention — result is always in `buffer1` — is documented in the header but relies on the caller knowing that the parity of the number of layers determines which physical buffer `buffer1` points to on return. A wrapper or a returned pointer would make this less error-prone.
 

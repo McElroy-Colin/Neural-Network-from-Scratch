@@ -59,15 +59,18 @@ int main(int argc, char** argv) {
     // Convert the given CSV file to a matrix of doubles, so each row represents a feature vector.
     const int num_feature_vectors = csv_to_matrix("sample_data/floats.csv", 1, 30, 10, &feature_matrix, &feature_lengths);
     if (num_feature_vectors == -1) {
-        fprintf(stderr, "from main(), csv_to_matrix() error");
+        fprintf(stderr, "from main(), csv_to_matrix() error\n");
         return 1;
     }
 
     unsigned int layers[3] = {7, 4, 2};
     const unsigned int max_layer = 7;
 
-    unsigned int *layer_offsets = (unsigned int*)malloc(5*sizeof(unsigned int));
-    compute_layer_offsets(3, 5, layers, layer_offsets);
+    unsigned int *weight_offsets = (unsigned int*)malloc(3*sizeof(unsigned int));
+    compute_weight_offsets(3, 5, layers, weight_offsets);
+
+    unsigned int *bias_offsets = (unsigned int*)malloc(3*sizeof(unsigned int));
+    compute_bias_offsets(3, layers, bias_offsets);
 
     ActivationFunc activation_fns[3] = {RELU, RELU, RELU};
 
@@ -75,8 +78,8 @@ int main(int argc, char** argv) {
         .layers = layers,
         .weights = weights,
         .biases = biases,
-        .weight_offsets = layer_offsets,
-        .bias_offsets = 0, // TODO
+        .weight_offsets = weight_offsets,
+        .bias_offsets = bias_offsets,
         .activation_fns = activation_fns,
         .num_features = num_feature_vectors,
         .num_layers = 3,
@@ -85,7 +88,7 @@ int main(int argc, char** argv) {
         .total_biases = 7 + 4 + 2
     };
 
-    unsigned int *dvc_layers, *dvc_layer_offsets;
+    unsigned int *dvc_layers, *dvc_weight_offsets;
     double *dvc_weights, *dvc_biases, *buffer1, *buffer2;
     ActivationFunc *dvc_activation_fns;
 
@@ -110,8 +113,8 @@ int main(int argc, char** argv) {
         printf("Output f%d: (%f, %f)\n", i + 1, output[0], output[1]);
     }
 
-    cudafree_ptrs(dvc_weights, dvc_layer_offsets, dvc_biases, dvc_activation_fns, buffer1, buffer2, NULL);
+    cudafree_ptrs(dvc_weights, dvc_weight_offsets, dvc_biases, dvc_activation_fns, buffer1, buffer2, NULL);
     free_2d_darr(feature_matrix, num_feature_vectors);
-    free_ptrs(output, layer_offsets, NULL);
+    free_ptrs(output, weight_offsets, NULL);
     return 0;
 }

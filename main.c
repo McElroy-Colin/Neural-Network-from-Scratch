@@ -28,7 +28,7 @@ int main(int argc, char** argv) {
         printf("%s%s", INPUT_CSV_PROMPT, INPUT_SUFFIX);
         const int line_size = get_next_line(&input_csv, 20, stdin);
         if (line_size == -1) {
-            fprintf(stderr, "from main(), get_next_line() error");
+            fprintf(stderr, "from main(), get_next_line() error\n");
             return 1;
         } else if (line_size == 0) {
             fprintf(stderr, "Must enter a valid CSV path...\n");
@@ -42,13 +42,13 @@ int main(int argc, char** argv) {
         cmd_line_layers = 1;
     // Get layer size values from the user if they weren't in the command line arguments.
     } else {
-        char *layer_sizes_line;
+        char *layers_line;
 
         // Prompt user for layer sizes.
         printf("%s%s", INPUT_LAYERS_PROMPT, INPUT_SUFFIX);
-        const int line_size = get_next_line(&layer_sizes_line, 20, stdin);
+        const int line_size = get_next_line(&layers_line, 20, stdin);
         if (line_size == -1) {
-            fprintf(stderr, "from main(), get_next_line() error");
+            fprintf(stderr, "from main(), get_next_line() error\n");
             free(input_csv);
             return 1;
         } else if (line_size == 0) {
@@ -58,14 +58,14 @@ int main(int argc, char** argv) {
         }
 
         // Split the size values string on white space to isolate numeric strings.
-        num_layers = str_split(layer_sizes_line, line_size, DEFAULT_NUM_LAYERS, WHITESPACE, WHITESPACE_COUNT, &layer_str_sizes);
+        num_layers = str_split(layers_line, line_size, DEFAULT_NUM_LAYERS, WHITESPACE, WHITESPACE_COUNT, &layer_str_sizes);
         if (num_layers == -1) {
-            fprintf(stderr, "from main(), str_split() error");
+            fprintf(stderr, "from main(), str_split() error\n");
             free(input_csv);
             return 1;
         }
 
-        free(layer_sizes_line);
+        free(layers_line);
     }
 
     double **feature_matrix;
@@ -74,7 +74,7 @@ int main(int argc, char** argv) {
     // Convert the given CSV file to a matrix of doubles, so each row represents a feature vector.
     const int num_feature_vectors = csv_to_matrix(input_csv, 1, 30, 10, &feature_matrix, &feature_lengths);
     if (num_feature_vectors == -1) {
-        fprintf(stderr, "from main(), csv_to_matrix() error");
+        fprintf(stderr, "from main(), csv_to_matrix() error\n");
         return 1;
     }
 
@@ -83,9 +83,9 @@ int main(int argc, char** argv) {
     }
 
     // Create an array of integers to store layer size values.
-    unsigned int *layer_sizes = malloc(num_layers*sizeof(unsigned int));
-    if (!layer_sizes) {
-        fprintf(stderr, "from main(), allocation error");
+    unsigned int *layers = malloc(num_layers*sizeof(unsigned int));
+    if (!layers) {
+        fprintf(stderr, "from main(), allocation error\n");
         free(input_csv);
         free_2d_carr(layer_str_sizes, num_layers);
         return 1;
@@ -93,10 +93,10 @@ int main(int argc, char** argv) {
 
     // Convert string layer size values into unsigned integers.
     for (int i = 0; i < num_layers; i++) {
-        int conversion_error = str_to_uint(layer_str_sizes[i], &(layer_sizes[i]));
+        int conversion_error = str_to_uint(layer_str_sizes[i], &(layers[i]));
         if (conversion_error == -1) {
             fprintf(stderr, "from main(), invalid layer size specification\n");
-            free_ptrs(input_csv, layer_sizes, NULL);
+            free_ptrs(input_csv, layers, NULL);
             free_2d_carr(layer_str_sizes, num_layers);
             return 1;
         }
@@ -156,11 +156,11 @@ int main(int argc, char** argv) {
     // Convert the given CSV file to a matrix of doubles, so each row represents a feature vector.
     const int num_feature_vectors = csv_to_matrix("sample_data/floats.csv", 1, 30, 10, &feature_matrix, &feature_lengths);
     if (num_feature_vectors == -1) {
-        fprintf(stderr, "from main(), csv_to_matrix() error");
+        fprintf(stderr, "from main(), csv_to_matrix() error\n");
         return 1;
     }
 
-    unsigned int layer_sizes[3] = {7, 4, 2};
+    unsigned int layers[3] = {7, 4, 2};
     num_layers = 3;
 
     /*          ^^ hard coded network ^^            */
@@ -170,21 +170,17 @@ int main(int argc, char** argv) {
 
     // Get weight offset values.
     unsigned int *weight_offsets = malloc(num_layers*sizeof(unsigned int));
-    compute_layer_offsets(num_layers, num_features, layer_sizes, weight_offsets);
+    compute_weight_offsets(num_layers, num_features, layers, weight_offsets);
 
     unsigned int *bias_offsets= malloc(num_layers*sizeof(unsigned int));
-    unsigned int sum = 0;
-    for (int i = 0 ; i < num_layers; i++) {
-        bias_offsets[i] = sum;
-        sum += layer_sizes[i];
-    }
+    compute_bias_offsets(num_layers, layers, bias_offsets);
 
-    unsigned int max_layer = arr_max(layer_sizes, num_layers);
+    unsigned int max_layer = arr_max(layers, num_layers);
     max_layer = max_layer > num_features ? max_layer : num_features;
 
     // Construct the neural network object.
     NeuralNetwork neural_net = {
-        .layers = layer_sizes,
+        .layers = layers,
         .weights = weights,
         .biases = biases,
         .weight_offsets = weight_offsets,
@@ -212,7 +208,7 @@ int main(int argc, char** argv) {
     }
 
     // Free buffers allocated from command line input.
-    // free_ptrs(layer_sizes, feature_lengths, weight_offsets, buffer1, buffer2, NULL);
+    // free_ptrs(layers, feature_lengths, weight_offsets, buffer1, buffer2, NULL);
     free_ptrs(feature_lengths, weight_offsets, buffer1, buffer2, NULL);
     free_2d_darr(feature_matrix, num_feature_vectors);
     return 0;
