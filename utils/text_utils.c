@@ -171,6 +171,7 @@ int csv_to_matrix(
     *output_lengths = malloc(curr_alloc*sizeof(unsigned int));
     if (!(*output_lengths)) {
         fprintf(stderr, "from csv_to_arr(), allocation error\n");
+        free(*value_output);
         return -1;
     }
 

@@ -26,7 +26,7 @@ typedef struct {
 
     // An array containing the bias vector offset value for each layer of the network.
     //     e.g. if `bias_offsets[2]` was `96`, then `biases[96]` would be the first bias of the second hidden layer.
-    unsigned int *bias_offsets; // TODO: total_neurons in ff does this on the fly, slower...
+    unsigned int *bias_offsets;
 
     // An array of function enum values specifying the activation for its respective layer, length 'num_layers'
     //     e.g. If `activation_fns[3]` references a sigmoid function, then layer FOUR will use sigmoid.
@@ -43,12 +43,35 @@ typedef struct {
     unsigned int max_layer_size;
 
     // Total number of weight values across all layers in the network.
-    unsigned int total_weights;
+    unsigned int num_weights;
 
     // Total number of bias values across all layers in the network. Also the total number of non-input neurons.
-    //     i.e. `total_biases = sum(layers)`
-    unsigned int total_biases;
+    //     i.e. `num_biases = sum(layers)`
+    unsigned int num_biases;
 } NeuralNetwork;
+
+// Used in both C and CUDA versions, so define it as C++ code.
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+// Initialize all variables of a neural network object given the necessary parameters.
+// Returns a pointer to the created neural network object, or `NULL` on error.
+// Note, all arrays in the neural network object must be freed on a successful call.
+NeuralNetwork* init_neural_net(
+    unsigned int num_features,
+    unsigned int *layers,
+    unsigned int num_layers,
+    double *weights,
+    unsigned int num_weights,
+    double *biases,
+    unsigned int num_biases,
+    ActivationFunc *activation_fns
+);
+
+#ifdef __cplusplus
+}
+#endif
 
 /*
 Perform a serial feed-forward dense neural network computation on the host given a neural network.

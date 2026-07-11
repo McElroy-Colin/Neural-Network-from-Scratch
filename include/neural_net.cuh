@@ -44,6 +44,7 @@ Parameters:
 
 Returns -1 on error, otherwise 0.
 */
+// TODO: Return the pointer here?
 int nn_load_dvc(
     NeuralNetwork *hst_neural_net,
     NeuralNetwork *shell_neural_net,

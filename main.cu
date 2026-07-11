@@ -20,7 +20,8 @@ extern "C" {
 int main(int argc, char** argv) {
     // TEST: 5 (in) -> 7 -> 4 -> 2 (out)
 
-    double weights[7*5 + 4*7 + 2*4] = {
+    const unsigned int num_weights = 7*5 + 4*7 + 2*4;
+    double weights[num_weights] = {
 
         // input layer -> 1 7x5
 
@@ -45,7 +46,8 @@ int main(int argc, char** argv) {
         2.4, 43.6, 32.34, 8.454
     };
 
-    double biases[7 + 4 + 2] = {
+    const unsigned int num_biases = 7 + 4 + 2;
+    double biases[num_biases] = {
         2.4, 43.6, 32.34, 8.454, 45.352, 3.54, 3.561,
 
         2.4, 43.6, 32.34, 8.454,
@@ -63,40 +65,44 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    unsigned int layers[3] = {7, 4, 2};
-    const unsigned int max_layer = 7;
+    // Assume all feature vectors are the same length.
+    const unsigned int num_features = feature_lengths[0];
 
-    unsigned int *weight_offsets = (unsigned int*)malloc(3*sizeof(unsigned int));
-    compute_weight_offsets(3, 5, layers, weight_offsets);
+    unsigned int num_layers = 3;
+    unsigned int layers[num_layers] = {7, 4, 2};
 
-    unsigned int *bias_offsets = (unsigned int*)malloc(3*sizeof(unsigned int));
-    compute_bias_offsets(3, layers, bias_offsets);
+    ActivationFunc activation_fns[num_layers] = {RELU, RELU, RELU};
 
-    ActivationFunc activation_fns[3] = {RELU, RELU, RELU};
+    NeuralNetwork *host_nn = init_neural_net(
+        num_features,
+        layers,
+        num_layers,
+        weights,
+        num_weights,
+        biases,
+        num_biases,
+        activation_fns
+    );
 
-    NeuralNetwork host_nn = {
-        .layers = layers,
-        .weights = weights,
-        .biases = biases,
-        .weight_offsets = weight_offsets,
-        .bias_offsets = bias_offsets,
-        .activation_fns = activation_fns,
-        .num_features = num_feature_vectors,
-        .num_layers = 3,
-        .max_layer_size = max_layer,
-        .total_weights = 7*5 + 4*7 + 2*4,
-        .total_biases = 7 + 4 + 2
-    };
+    if (!host_nn) {
+        fprintf(stderr, "from main(), init_neural_net() error\n");
+        free(feature_lengths);
+        free_2d_darr(feature_matrix, num_feature_vectors);
+        return 1;
+    }
 
-    unsigned int *dvc_layers, *dvc_weight_offsets;
-    double *dvc_weights, *dvc_biases, *buffer1, *buffer2;
-    ActivationFunc *dvc_activation_fns;
+    double *buffer1, *buffer2;
 
     NeuralNetwork shell_nn;
+    int err = nn_load_dvc(host_nn, &shell_nn, &buffer1, &buffer2);
+    if (err == -1) {
+        fprintf(stderr, "from main(), nn_load_dvc() error\n");
+        free_ptrs(feature_lengths, host_nn->weight_offsets, host_nn->bias_offsets, NULL);
+        free_2d_darr(feature_matrix, num_feature_vectors);
+        return 1;
+    }
 
-    nn_load_dvc(&host_nn, &shell_nn, &buffer1, &buffer2);
-
-    dim3 num_blocks((max_layer + TILE_SIZE - 1) / TILE_SIZE);
+    dim3 num_blocks((shell_nn.max_layer_size + TILE_SIZE - 1) / TILE_SIZE);
     dim3 threads_per_block(TILE_SIZE, TILE_SIZE);
 
     double *output = (double*)malloc(2*sizeof(double));
@@ -113,8 +119,9 @@ int main(int argc, char** argv) {
         printf("Output f%d: (%f, %f)\n", i + 1, output[0], output[1]);
     }
 
-    cudafree_ptrs(dvc_weights, dvc_weight_offsets, dvc_biases, dvc_activation_fns, buffer1, buffer2, NULL);
+    // TODO: build destructor for nn obj.
+    cudafree_ptrs(shell_nn.layers, shell_nn.weights, shell_nn.weight_offsets, shell_nn.biases, shell_nn.bias_offsets, shell_nn.activation_fns, buffer1, buffer2, NULL);
     free_2d_darr(feature_matrix, num_feature_vectors);
-    free_ptrs(output, weight_offsets, NULL);
+    free_ptrs(output, host_nn->weight_offsets, host_nn->bias_offsets, NULL);
     return 0;
 }

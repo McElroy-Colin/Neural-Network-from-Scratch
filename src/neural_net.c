@@ -6,7 +6,54 @@
 
 #include "neural_net.h"
 #include "activation_functions.h"
+#include "compute_utils.h"
 
+
+// TODO return by value here
+NeuralNetwork* init_neural_net(
+    unsigned int num_features,
+    unsigned int *layers,
+    unsigned int num_layers,
+    double *weights,
+    unsigned int num_weights,
+    double *biases,
+    unsigned int num_biases,
+    ActivationFunc *activation_fns
+) {
+    // Calculate maximum layer size including input layer.
+    unsigned int max_layer_size = arr_max(layers, num_layers);
+    max_layer_size = max_layer_size > num_features ? max_layer_size : num_features;
+
+    // Compute weight and bias offsets.
+    unsigned int *weight_offsets = compute_weight_offsets(num_layers, num_features, layers);
+    if (!weight_offsets) {
+        fprintf(stderr, "from init_neural_net(), memory allocation error\n");
+        return NULL;
+    }
+
+    unsigned int *bias_offsets = compute_bias_offsets(num_layers, layers);
+    if (!bias_offsets) {
+        fprintf(stderr, "from init_neural_net(), memory allocation error\n");
+        free(weight_offsets);
+        return NULL;
+    }
+
+    // breaks the code...
+    NeuralNetwork *output_nn;
+    output_nn->layers = layers;
+    output_nn->weights = weights;
+    output_nn->biases = biases;
+    output_nn->weight_offsets = weight_offsets;
+    output_nn->bias_offsets = bias_offsets;
+    output_nn->activation_fns = activation_fns;
+    output_nn->num_features = num_features;
+    output_nn->num_layers = num_layers;
+    output_nn->max_layer_size = max_layer_size;
+    output_nn->num_weights = num_weights;
+    output_nn->num_biases = num_biases;
+
+    return output_nn;
+}
 
 void feed_forward_hst( 
     const NeuralNetwork *neural_net, // could make it `const NeuralNetwork *restrict neural_net`
@@ -23,7 +70,7 @@ void feed_forward_hst(
     unsigned int curr_neurons_in = neural_net->num_features;
 
     // Outer loop goes through one layer at a time, updating buffers with each neuron's activated output.
-    for (int l = 0; l < neural_net->num_layers; l++) {
+    for (int l = 0; l < num_layers; l++) {
         // Store local variables for each layer to allow compiler caching on inner iterations.
         const ActivationFunc curr_activation = activation_fns[l];
         const unsigned int curr_neurons_out = layers[l];
@@ -112,6 +159,7 @@ int train_hst(
     // Ceiling division
     const unsigned int num_batches = (num_features + batch_size - 1) / batch_size;
     
+    // TODO: Error check these malloc calls.
     // Buffer to store outputs of a batch's forward pass.
     double *y_hats = malloc(batch_size*layers[num_layers - 1]*sizeof(double));
     double *buffer1 = malloc(max_layer_size*sizeof(double));

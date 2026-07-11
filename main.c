@@ -15,7 +15,7 @@
 int main(int argc, char** argv) {
     char **layer_str_sizes;
     char *input_csv;
-    int num_layers = 0;
+    unsigned int num_layers = 0;
     int cmd_line_csv = 0;
     int cmd_line_layers = 0;
 
@@ -115,7 +115,8 @@ int main(int argc, char** argv) {
     
     // TEST: 5 (in) -> 7 -> 4 -> 2 (out)
 
-    const double weights[7*5 + 4*7 + 2*4] = {
+    const unsigned int num_weights = 7*5 + 4*7 + 2*4;
+    double weights[] = {
 
         // input layer -> 1 7x5
 
@@ -140,7 +141,8 @@ int main(int argc, char** argv) {
         2.4, 43.6, 32.34, 8.454
     };
 
-    const double biases[7 + 4 + 2] = {
+    const unsigned int num_biases = 7 + 4 + 2;
+    double biases[] = {
         2.4, 43.6, 32.34, 8.454, 45.352, 3.54, 3.561,
 
         2.4, 43.6, 32.34, 8.454,
@@ -168,39 +170,33 @@ int main(int argc, char** argv) {
     // Assume the CSV contained vectors of the same length.
     const unsigned int num_features = feature_lengths[0];
 
-    // Get weight offset values.
-    unsigned int *weight_offsets = malloc(num_layers*sizeof(unsigned int));
-    compute_weight_offsets(num_layers, num_features, layers, weight_offsets);
+    NeuralNetwork *neural_net = init_neural_net(
+        num_features,
+        layers,
+        num_layers,
+        weights,
+        num_weights,
+        biases,
+        num_biases,
+        funcs
+    );
 
-    unsigned int *bias_offsets= malloc(num_layers*sizeof(unsigned int));
-    compute_bias_offsets(num_layers, layers, bias_offsets);
+    if (!neural_net) {
+        fprintf(stderr, "from main(), init_neural_net() error\n");
+        free(feature_lengths);
+        free_2d_darr(feature_matrix, num_feature_vectors);
+        return 1;
+    }
 
-    unsigned int max_layer = arr_max(layers, num_layers);
-    max_layer = max_layer > num_features ? max_layer : num_features;
-
-    // Construct the neural network object.
-    NeuralNetwork neural_net = {
-        .layers = layers,
-        .weights = weights,
-        .biases = biases,
-        .weight_offsets = weight_offsets,
-        .bias_offsets = bias_offsets,
-        .activation_fns = funcs,
-        .num_features = num_features,
-        .num_layers = num_layers,
-        .max_layer_size = max_layer,
-        .total_weights = 0, // TODO
-        .total_biases = 0 // TODO
-    };
-
-    double *buffer1 = malloc(max_layer*sizeof(double));
-    double *buffer2 = malloc(max_layer*sizeof(double));
+    // TODO: Error check these
+    double *buffer1 = malloc(neural_net->max_layer_size*sizeof(double));
+    double *buffer2 = malloc(neural_net->max_layer_size*sizeof(double));
 
     for (int i = 0; i < num_feature_vectors; i++) {
         memcpy(buffer1, feature_matrix[i], num_features*sizeof(double));
 
         feed_forward_hst(
-            &neural_net,
+            neural_net,
             buffer1, buffer2
         );
 
@@ -209,7 +205,7 @@ int main(int argc, char** argv) {
 
     // Free buffers allocated from command line input.
     // free_ptrs(layers, feature_lengths, weight_offsets, buffer1, buffer2, NULL);
-    free_ptrs(feature_lengths, weight_offsets, buffer1, buffer2, NULL);
+    free_ptrs(feature_lengths, neural_net->weight_offsets, neural_net->bias_offsets, buffer1, buffer2, NULL);
     free_2d_darr(feature_matrix, num_feature_vectors);
     return 0;
 }

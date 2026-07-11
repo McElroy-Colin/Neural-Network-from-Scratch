@@ -49,6 +49,7 @@ int get_next_line(char **input, const unsigned int default_size, FILE *stream);
 Convert the given CSV file into a 2D matrix of doubles, where each row represents one line in the CSV.
 This function expects a CSV file consisting ONLY of floating point numbers. Error on any invalid characters/numbers.
 An empty line in the given CSV will halt processing at that line.
+Note, value_output is a 2D array that must be freed and output lengths must be freed after the call if there is no error.
 
 Parameters:
     `filename`: path to CSV file (input)

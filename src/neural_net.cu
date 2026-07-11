@@ -22,7 +22,6 @@ __global__ void feed_forward_dvc(
 
     unsigned int idx = blockIdx.x*blockDim.x + threadIdx.x;
     unsigned int curr_neurons_in = neural_net.num_features;
-    unsigned int total_neurons = 0; // TODO: remove for bias offsets
 
     unsigned int *layers = neural_net.layers;
     double *weights = neural_net.weights;
@@ -71,8 +70,6 @@ __global__ void feed_forward_dvc(
             buffer2[idx] = activation_func_dvc(z + biases[curr_bias_offset + idx], curr_activation); // TODO fix
         }
 
-        total_neurons += curr_neurons_out;
-
         // Exchange the computed layer for the previous layer variables.
         curr_neurons_in = curr_neurons_out;
         double *temp = buffer1;
@@ -96,8 +93,8 @@ int nn_load_dvc(
     shell_neural_net->num_features = hst_neural_net->num_features;
     shell_neural_net->num_layers = hst_neural_net->num_layers;
     shell_neural_net->max_layer_size = hst_neural_net->max_layer_size;
-    shell_neural_net->total_weights = hst_neural_net->total_weights;
-    shell_neural_net->total_biases = hst_neural_net->total_biases;
+    shell_neural_net->num_weights = hst_neural_net->num_weights;
+    shell_neural_net->num_biases = hst_neural_net->num_biases;
 
     // Now, allocate GPU memory arrays.
 
@@ -114,14 +111,14 @@ int nn_load_dvc(
         return -1;
     }
 
-    err = cudaMalloc(&shell_neural_net->weights, shell_neural_net->total_weights*sizeof(double));
+    err = cudaMalloc(&shell_neural_net->weights, shell_neural_net->num_weights*sizeof(double));
     if (err != cudaSuccess) {
         fprintf(stderr, "from nn_load_dvc(), cuda allocation error\n");
         cudaFree(shell_neural_net->layers);
         return -1;
     }
 
-    err = cudaMemcpy(shell_neural_net->weights, hst_neural_net->weights, shell_neural_net->total_weights*sizeof(double), cudaMemcpyHostToDevice);
+    err = cudaMemcpy(shell_neural_net->weights, hst_neural_net->weights, shell_neural_net->num_weights*sizeof(double), cudaMemcpyHostToDevice);
     if (err != cudaSuccess) {
         fprintf(stderr, "from nn_load_dvc(), cuda memory copy error2\n");
         cudafree_ptrs(shell_neural_net->layers, shell_neural_net->weights, NULL);
@@ -142,14 +139,14 @@ int nn_load_dvc(
         return -1;
     }
 
-    err = cudaMalloc(&shell_neural_net->biases, shell_neural_net->total_biases*sizeof(double));
+    err = cudaMalloc(&shell_neural_net->biases, shell_neural_net->num_biases*sizeof(double));
     if (err != cudaSuccess) {
         fprintf(stderr, "from nn_load_dvc(), cuda allocation error\n");
         cudafree_ptrs(shell_neural_net->layers, shell_neural_net->weights, shell_neural_net->weight_offsets, NULL);
         return -1;
     }
 
-    err = cudaMemcpy(shell_neural_net->biases, hst_neural_net->biases, shell_neural_net->total_biases*sizeof(double), cudaMemcpyHostToDevice);
+    err = cudaMemcpy(shell_neural_net->biases, hst_neural_net->biases, shell_neural_net->num_biases*sizeof(double), cudaMemcpyHostToDevice);
     if (err != cudaSuccess) {
         fprintf(stderr, "from nn_load_dvc(), cuda memory copy error4\n");
         cudafree_ptrs(shell_neural_net->layers, shell_neural_net->weights, shell_neural_net->weight_offsets, shell_neural_net->biases, NULL);
