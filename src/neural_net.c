@@ -7,10 +7,11 @@
 #include "neural_net.h"
 #include "activation_functions.h"
 #include "compute_utils.h"
+#include "memory_utils.h"
 
 
 // TODO return by value here
-NeuralNetwork* init_neural_net(
+int init_neural_net(
     unsigned int num_features,
     unsigned int *layers,
     unsigned int num_layers,
@@ -18,7 +19,8 @@ NeuralNetwork* init_neural_net(
     unsigned int num_weights,
     double *biases,
     unsigned int num_biases,
-    ActivationFunc *activation_fns
+    ActivationFunc *activation_fns,
+    NeuralNetwork *output_nn
 ) {
     // Calculate maximum layer size including input layer.
     unsigned int max_layer_size = arr_max(layers, num_layers);
@@ -28,18 +30,17 @@ NeuralNetwork* init_neural_net(
     unsigned int *weight_offsets = compute_weight_offsets(num_layers, num_features, layers);
     if (!weight_offsets) {
         fprintf(stderr, "from init_neural_net(), memory allocation error\n");
-        return NULL;
+        return -1;
     }
 
     unsigned int *bias_offsets = compute_bias_offsets(num_layers, layers);
     if (!bias_offsets) {
         fprintf(stderr, "from init_neural_net(), memory allocation error\n");
         free(weight_offsets);
-        return NULL;
+        return -1;
     }
 
-    // breaks the code...
-    NeuralNetwork *output_nn;
+    // Fully initialize the object.
     output_nn->layers = layers;
     output_nn->weights = weights;
     output_nn->biases = biases;
@@ -52,7 +53,26 @@ NeuralNetwork* init_neural_net(
     output_nn->num_weights = num_weights;
     output_nn->num_biases = num_biases;
 
-    return output_nn;
+    return 0;
+}
+
+void free_neural_net(NeuralNetwork *neural_net) {
+    /* TEMP, current test file uses static arrays for some elements of the neural network object.
+    free_ptrs(
+        neural_net->layers, 
+        neural_net->weights,
+        neural_net->biases,
+        neural_net->weight_offsets,
+        neural_net->bias_offsets,
+        neural_net->activation_fns,
+        NULL
+    );*/
+
+    free_ptrs(
+        neural_net->weight_offsets,
+        neural_net->bias_offsets,
+        NULL
+    );
 }
 
 void feed_forward_hst( 
@@ -159,11 +179,24 @@ int train_hst(
     // Ceiling division
     const unsigned int num_batches = (num_features + batch_size - 1) / batch_size;
     
-    // TODO: Error check these malloc calls.
     // Buffer to store outputs of a batch's forward pass.
     double *y_hats = malloc(batch_size*layers[num_layers - 1]*sizeof(double));
+    if (!y_hats) {
+        fprintf(stderr, "from train_hst(), memory allocation error\n");
+        return -1;
+    }
     double *buffer1 = malloc(max_layer_size*sizeof(double));
+    if (!buffer1) {
+        fprintf(stderr, "from train_hst(), memory allocation error\n");
+        free(y_hats);
+        return -1;
+    }
     double *buffer2 = malloc (max_layer_size*sizeof(double));
+    if (!buffer2) {
+        fprintf(stderr, "from train_hst(), memory allocation error\n");
+        free_ptrs(y_hats, buffer1, NULL);
+        return -1;
+    }
 
     // Outer loop sends batches of feature vectors.
     for (int b = 0; b < num_batches; b++) {

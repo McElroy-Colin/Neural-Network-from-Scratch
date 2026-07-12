@@ -170,7 +170,8 @@ int main(int argc, char** argv) {
     // Assume the CSV contained vectors of the same length.
     const unsigned int num_features = feature_lengths[0];
 
-    NeuralNetwork *neural_net = init_neural_net(
+    NeuralNetwork neural_net;
+    int err = init_neural_net(
         num_features,
         layers,
         num_layers,
@@ -178,10 +179,11 @@ int main(int argc, char** argv) {
         num_weights,
         biases,
         num_biases,
-        funcs
+        funcs,
+        &neural_net
     );
 
-    if (!neural_net) {
+    if (err == -1) {
         fprintf(stderr, "from main(), init_neural_net() error\n");
         free(feature_lengths);
         free_2d_darr(feature_matrix, num_feature_vectors);
@@ -189,14 +191,28 @@ int main(int argc, char** argv) {
     }
 
     // TODO: Error check these
-    double *buffer1 = malloc(neural_net->max_layer_size*sizeof(double));
-    double *buffer2 = malloc(neural_net->max_layer_size*sizeof(double));
+    double *buffer1 = malloc(neural_net.max_layer_size*sizeof(double));
+    if (!buffer1) {
+        fprintf(stderr, "from main(), memory allocation error\n");
+        free_neural_net(&neural_net);
+        free(feature_lengths);
+        free_2d_darr(feature_matrix, num_feature_vectors);
+        return 1;
+    }
+    double *buffer2 = malloc(neural_net.max_layer_size*sizeof(double));
+    if (!buffer2) {
+        fprintf(stderr, "from main(), memory allocation error\n");
+        free_neural_net(&neural_net);
+        free_ptrs(feature_lengths, buffer1, NULL);
+        free_2d_darr(feature_matrix, num_feature_vectors);
+        return 1;
+    }
 
     for (int i = 0; i < num_feature_vectors; i++) {
         memcpy(buffer1, feature_matrix[i], num_features*sizeof(double));
 
         feed_forward_hst(
-            neural_net,
+            &neural_net,
             buffer1, buffer2
         );
 
@@ -205,7 +221,8 @@ int main(int argc, char** argv) {
 
     // Free buffers allocated from command line input.
     // free_ptrs(layers, feature_lengths, weight_offsets, buffer1, buffer2, NULL);
-    free_ptrs(feature_lengths, neural_net->weight_offsets, neural_net->bias_offsets, buffer1, buffer2, NULL);
+    free_neural_net(&neural_net);
+    free_ptrs(feature_lengths, buffer1, buffer2, NULL);
     free_2d_darr(feature_matrix, num_feature_vectors);
     return 0;
 }

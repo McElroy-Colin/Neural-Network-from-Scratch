@@ -104,6 +104,10 @@ int get_next_line(char **output, const unsigned int default_size, FILE *stream) 
     // Allocate space according to the default size.
     size_t curr_alloc = default_size*sizeof(char);
     *output = malloc(curr_alloc + 1);
+    if (!(*output)) {
+        fprintf(stderr, "from get_next_line(), memory allocation error\n");
+        return -1;
+    }
 
     // Add characters to the output buffer, resize the buffer when needed.
     while (((c = fgetc(stream)) != '\n') && (c != EOF)) {

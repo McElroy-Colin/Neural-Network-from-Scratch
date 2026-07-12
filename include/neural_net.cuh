@@ -44,11 +44,12 @@ Parameters:
 
 Returns -1 on error, otherwise 0.
 */
-// TODO: Return the pointer here?
 int nn_load_dvc(
     NeuralNetwork *hst_neural_net,
     NeuralNetwork *shell_neural_net,
     double **dvc_buffer1, double **dvc_buffer2
 );
+
+void cudafree_neural_net(NeuralNetwork *neural_net);
 
 #endif

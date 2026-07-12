@@ -73,7 +73,8 @@ int main(int argc, char** argv) {
 
     ActivationFunc activation_fns[num_layers] = {RELU, RELU, RELU};
 
-    NeuralNetwork *host_nn = init_neural_net(
+    NeuralNetwork host_nn;
+    int err = init_neural_net(
         num_features,
         layers,
         num_layers,
@@ -81,10 +82,11 @@ int main(int argc, char** argv) {
         num_weights,
         biases,
         num_biases,
-        activation_fns
+        activation_fns,
+        &host_nn
     );
 
-    if (!host_nn) {
+    if (err == -1) {
         fprintf(stderr, "from main(), init_neural_net() error\n");
         free(feature_lengths);
         free_2d_darr(feature_matrix, num_feature_vectors);
@@ -92,12 +94,11 @@ int main(int argc, char** argv) {
     }
 
     double *buffer1, *buffer2;
-
     NeuralNetwork shell_nn;
-    int err = nn_load_dvc(host_nn, &shell_nn, &buffer1, &buffer2);
+    err = nn_load_dvc(&host_nn, &shell_nn, &buffer1, &buffer2);
     if (err == -1) {
         fprintf(stderr, "from main(), nn_load_dvc() error\n");
-        free_ptrs(feature_lengths, host_nn->weight_offsets, host_nn->bias_offsets, NULL);
+        free_ptrs(feature_lengths, host_nn.weight_offsets, host_nn.bias_offsets, NULL);
         free_2d_darr(feature_matrix, num_feature_vectors);
         return 1;
     }
@@ -106,6 +107,13 @@ int main(int argc, char** argv) {
     dim3 threads_per_block(TILE_SIZE, TILE_SIZE);
 
     double *output = (double*)malloc(2*sizeof(double));
+    if (!output) {
+         fprintf(stderr, "from main(), memory allocation error error\n");
+        free_ptrs(feature_lengths, host_nn.weight_offsets, host_nn.bias_offsets, NULL);
+        free_2d_darr(feature_matrix, num_feature_vectors);
+        cudafree_neural_net(&shell_nn);
+        return 1;
+    }
 
     for (int i = 0; i < num_feature_vectors; i++) {
         cudaMemcpy(buffer1, feature_matrix[i], 5*sizeof(double), cudaMemcpyHostToDevice);
@@ -119,9 +127,9 @@ int main(int argc, char** argv) {
         printf("Output f%d: (%f, %f)\n", i + 1, output[0], output[1]);
     }
 
-    // TODO: build destructor for nn obj.
-    cudafree_ptrs(shell_nn.layers, shell_nn.weights, shell_nn.weight_offsets, shell_nn.biases, shell_nn.bias_offsets, shell_nn.activation_fns, buffer1, buffer2, NULL);
+    cudafree_neural_net(&shell_nn);
+    free_neural_net(&host_nn);
+    cudafree_ptrs(buffer1, buffer2, NULL);
     free_2d_darr(feature_matrix, num_feature_vectors);
-    free_ptrs(output, host_nn->weight_offsets, host_nn->bias_offsets, NULL);
     return 0;
 }

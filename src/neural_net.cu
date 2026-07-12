@@ -13,6 +13,20 @@
 #include "text_utils.h"
 
 
+void cudafree_neural_net(NeuralNetwork *neural_net) {
+    cudafree_ptrs(
+        neural_net->layers,
+        neural_net->weights,
+        neural_net->biases,
+        neural_net->weight_offsets,
+        neural_net->bias_offsets,
+        neural_net->activation_fns,
+        NULL
+    );
+
+    return;
+}
+
 __global__ void feed_forward_dvc(
     NeuralNetwork neural_net,
     double *buffer1, double *buffer2
@@ -149,14 +163,26 @@ int nn_load_dvc(
     err = cudaMemcpy(shell_neural_net->biases, hst_neural_net->biases, shell_neural_net->num_biases*sizeof(double), cudaMemcpyHostToDevice);
     if (err != cudaSuccess) {
         fprintf(stderr, "from nn_load_dvc(), cuda memory copy error4\n");
-        cudafree_ptrs(shell_neural_net->layers, shell_neural_net->weights, shell_neural_net->weight_offsets, shell_neural_net->biases, NULL);
+        cudafree_ptrs(
+            shell_neural_net->layers, 
+            shell_neural_net->weights, 
+            shell_neural_net->weight_offsets, 
+            shell_neural_net->biases, 
+            NULL
+        );
         return -1;
     }
 
     err = cudaMalloc(&shell_neural_net->bias_offsets, shell_neural_net->num_layers*sizeof(unsigned int));
     if (err != cudaSuccess) {
         fprintf(stderr, "from nn_load_dvc(), cuda allocation error\n");
-        cudafree_ptrs(shell_neural_net->layers, shell_neural_net->weights, shell_neural_net->weight_offsets, shell_neural_net->biases, NULL);
+        cudafree_ptrs(
+            shell_neural_net->layers, 
+            shell_neural_net->weights, 
+            shell_neural_net->weight_offsets, 
+            shell_neural_net->biases, 
+            NULL
+        );
         return -1;
     }
 
@@ -168,7 +194,8 @@ int nn_load_dvc(
             shell_neural_net->weight_offsets, 
             shell_neural_net->biases, 
             shell_neural_net->bias_offsets, 
-            NULL);
+            NULL
+        );
         return -1;
     }
 
@@ -180,20 +207,15 @@ int nn_load_dvc(
             shell_neural_net->weight_offsets, 
             shell_neural_net->biases, 
             shell_neural_net->bias_offsets, 
-            NULL);
+            NULL
+        );
         return -1;
     }
 
     err = cudaMemcpy(shell_neural_net->activation_fns, hst_neural_net->activation_fns, shell_neural_net->num_layers*sizeof(ActivationFunc), cudaMemcpyHostToDevice);
     if (err != cudaSuccess) {
         fprintf(stderr, "from nn_load_dvc(), cuda memory copy error6\n");
-        cudafree_ptrs(shell_neural_net->layers, 
-            shell_neural_net->weights, 
-            shell_neural_net->weight_offsets, 
-            shell_neural_net->biases, 
-            shell_neural_net->bias_offsets, 
-            shell_neural_net->activation_fns, 
-            NULL);
+        cudafree_neural_net(shell_neural_net);
         return -1;
     }
 
@@ -203,26 +225,15 @@ int nn_load_dvc(
     err = cudaMalloc(dvc_buffer1, shell_neural_net->max_layer_size*sizeof(double));
     if (err != cudaSuccess) {
         fprintf(stderr, "from nn_load_dvc(), cuda allocation error\n");
-        cudafree_ptrs(shell_neural_net->layers, 
-            shell_neural_net->weights, 
-            shell_neural_net->weight_offsets, 
-            shell_neural_net->biases, 
-            shell_neural_net->bias_offsets, 
-            shell_neural_net->activation_fns, 
-            NULL);
+        cudafree_neural_net(shell_neural_net);
         return -1;
     }
 
     err = cudaMalloc(dvc_buffer2, shell_neural_net->max_layer_size*sizeof(double));
     if (err != cudaSuccess) {
         fprintf(stderr, "from nn_load_dvc(), cuda allocation error\n");
-        cudafree_ptrs(shell_neural_net->layers, 
-            shell_neural_net->weights, 
-            shell_neural_net->weight_offsets, 
-            shell_neural_net->biases, 
-            shell_neural_net->bias_offsets, 
-            shell_neural_net->activation_fns, 
-            NULL);
+        cudafree_neural_net(shell_neural_net);
+        cudaFree(dvc_buffer1);
         return -1;
     }
 

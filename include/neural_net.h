@@ -56,9 +56,9 @@ extern "C" {
 #endif
 
 // Initialize all variables of a neural network object given the necessary parameters.
-// Returns a pointer to the created neural network object, or `NULL` on error.
+// Returns the created neural network object, or `NULL` on error.
 // Note, all arrays in the neural network object must be freed on a successful call.
-NeuralNetwork* init_neural_net(
+int init_neural_net(
     unsigned int num_features,
     unsigned int *layers,
     unsigned int num_layers,
@@ -66,8 +66,12 @@ NeuralNetwork* init_neural_net(
     unsigned int num_weights,
     double *biases,
     unsigned int num_biases,
-    ActivationFunc *activation_fns
+    ActivationFunc *activation_fns,
+    NeuralNetwork *output_nn
 );
+
+// TODO: make a destructor once main has heap allocated arrays for its neural net.
+void free_neural_net(NeuralNetwork *neural_net);
 
 #ifdef __cplusplus
 }
