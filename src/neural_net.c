@@ -9,6 +9,8 @@
 #include "compute_utils.h"
 #include "memory_utils.h"
 
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
+
 
 // TODO return by value here
 int init_neural_net(
@@ -77,7 +79,7 @@ void free_neural_net(NeuralNetwork *neural_net) {
 
 void feed_forward_hst( 
     const NeuralNetwork *neural_net, // could make it `const NeuralNetwork *restrict neural_net`
-    double *buffer1, double *buffer2
+    double *y_hats, double *buffer2
 ) {
     // Hoist pointers from the neural network object to avoid constant dereferencing.
     const double *weights = neural_net->weights;
@@ -105,7 +107,7 @@ void feed_forward_hst(
 
             // Innermost loop goes through output from each neuron in the previous layer and computes intermediate weighted sum.
             for (int i = 0; i < curr_neurons_in; i++) {
-                z += weights[curr_weight_offset + curr_row_index + i]*buffer1[i];
+                z += weights[curr_weight_offset + curr_row_index + i]*y_hats[i];
             }
             z += biases[curr_bias_offset + n];
 
@@ -115,14 +117,14 @@ void feed_forward_hst(
         }
 
         // After each layer, swap the input and output buffers so that the next layer's input is the current layer's output.
-        // Output buffer must also be swapped to avoid writing over input data for the next layer.
-        double *temp = buffer1;
-        buffer1 = buffer2;
+        // Output buffer2 must also be swapped to avoid writing over input data for the next layer.
+        double *temp = y_hats;
+        y_hats = buffer2;
         buffer2 = temp;
         
         curr_neurons_in = curr_neurons_out;
     }
-    // TODO: Wrap the output buffer, since it is only length layers[num_layers - 1] and buffer1 is length largest_layer_size.
+    // TODO: Wrap the output buffer2, since it is only length layers[num_layers - 1] and y_hats is length largest_layer_size.
     //       Better to do this outside the function?
 
     return;
@@ -153,11 +155,12 @@ void batch_mse(const double *ys,
 }
 
 
-int train_hst(
+int train_hst( // TODO: make what error function to use an argument of the function call, use function pointers
     NeuralNetwork *neural_net,
-    const double *features, // Flattened array of feature vectors
-    const unsigned int batch_size
-    // ...
+    const double *feature_vectors, // Flattened array of ALL feature vectors (length num_features*num_vectors)
+    const double *ys, // flattened array of output vectors where the i'th corresponds to the i'th feature vector^, length output_size*num_vectors
+    const unsigned int num_vectors, // number of training vectors used
+    const unsigned int batch_size // number of feature vector pairs per batch
 ) {
     // Hoist pointers from the neural network object to avoid constant dereferencing.
     double *weights = neural_net->weights;
@@ -169,49 +172,60 @@ int train_hst(
     const unsigned int num_features = neural_net->num_features;
     const unsigned int num_layers = neural_net->num_layers;
     const unsigned int max_layer_size = neural_net->max_layer_size;
-    /* 
-    Steps: 
-        Test matrix has a corresponding matrix of output vectors. Take a portion of these pairs as
-        test elements and the rest as training.
-        Send a vector through feed forward, get loss, do gradient for each different act func, backprop.
-    */
-
-    // Ceiling division
-    const unsigned int num_batches = (num_features + batch_size - 1) / batch_size;
+    
+    // Ceiling division to get the number of batches.
+    const unsigned int num_batches = (num_vectors + batch_size - 1) / batch_size;
+    // Length of the neural network's output layer.
+    const unsigned int output_size = layers[num_layers - 1];
     
     // Buffer to store outputs of a batch's forward pass.
-    double *y_hats = malloc(batch_size*layers[num_layers - 1]*sizeof(double));
+    /*
+    Note, `y_hats` is used as both y_hats and the flattened array of forward pass outputs for the batch.
+    So, `y_hats` must always have enough room for `max_layer_size`, even on the last output of 
+    the batch. So, add `max_layer_size` elements and subtract a `output_size`, so the final `max_layer_size` 
+    elements will fit the final output vector AND each layer on the final forward pass.
+
+    `batch_size*output_size + max_layer_size - output_size => (batch_size - 1)*output_size + max_layer_size`
+    */
+    double *y_hats = malloc(((batch_size - 1)*output_size + max_layer_size)*sizeof(double));
     if (!y_hats) {
         fprintf(stderr, "from train_hst(), memory allocation error\n");
         return -1;
     }
-    double *buffer1 = malloc(max_layer_size*sizeof(double));
-    if (!buffer1) {
+    double *buffer2 = malloc(max_layer_size*sizeof(double));
+    if (!buffer2) {
         fprintf(stderr, "from train_hst(), memory allocation error\n");
         free(y_hats);
         return -1;
     }
-    double *buffer2 = malloc (max_layer_size*sizeof(double));
+    double *errs = malloc(batch_size*sizeof(double));
     if (!buffer2) {
         fprintf(stderr, "from train_hst(), memory allocation error\n");
-        free_ptrs(y_hats, buffer1, NULL);
+        free_ptrs(y_hats, buffer2, NULL);
         return -1;
     }
 
     // Outer loop sends batches of feature vectors.
     for (int b = 0; b < num_batches; b++) {
-        
+        double *curr_yhats = y_hats;
         // Forward pass loop for the current batch.
-        for (int fp = 0; fp < batch_size; fp++) {
-            // Store buffer1 (output) in y_hats for each forward pass of the batch...
-            //feed_forward_hst();
+        for (int fp = 0; fp < batch_size; fp++) { // TODO: last batch is usually smaller, so last iteration could be faster.
+            memcpy(curr_yhats, feature_vectors, num_features*sizeof(double));
+
+            // `curr_yhats` will now hold the current forward pass output. 
+            feed_forward_hst(neural_net, curr_yhats, buffer2); //  TODO: could write a faster training ff version
+            
+            curr_yhats += output_size;
+            feature_vectors += num_features;
         }
+        // Get error values for each output vector of the batch.
+        batch_mse(ys, y_hats, output_size, batch_size, errs); // TODO choice argument...
+
+        // NEXT: compute gradient and adjust weights.
+
     }
 
 
-
-
-
-    free(y_hats);
+    free_ptrs(y_hats, buffer2, errs, NULL);
 }
 
