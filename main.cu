@@ -13,7 +13,7 @@ extern "C" {
 #include "constants.h"
 
 #include "neural_net.cuh"
-#include "activation_functions.cuh"
+#include "activation_loss.cuh"
 
 
 // The results are accurate with tile size smaller than that of `mul_vector` and otherwise.

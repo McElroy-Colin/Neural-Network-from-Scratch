@@ -7,7 +7,7 @@
 
 #include "memory_utils.cuh"
 #include "neural_net.cuh"
-#include "activation_functions.cuh"
+#include "activation_loss.cuh"
 #include "compute_utils.h"
 #include "constants.h"
 #include "text_utils.h"

@@ -3,7 +3,7 @@
 #ifndef NEURAL_NET_H
 #define NEURAL_NET_H
 
-#include "activation_functions.h"
+#include "activation_loss.h"
 
 
 // Neural Network structure containing all relevent network topology.
@@ -55,6 +55,16 @@ typedef struct {
 extern "C" {
 #endif
 
+// Check that `num_weights` and `num_biases` are consistent with the given `num_features` and layer dimensionality.
+// Ths function assumes that `layers` is length `num_layers`.
+// Returns -1 if dimensionality is incorrect, otherwise 0.
+int nn_dimcheck(unsigned int num_features,
+    unsigned int *layers,
+    unsigned int num_layers,
+    unsigned int num_weights,
+    unsigned int num_biases
+);
+
 // Initialize all variables of a neural network object given the necessary parameters.
 // Returns the created neural network object, or `NULL` on error.
 // Note, all arrays in the neural network object must be freed on a successful call.
@@ -70,7 +80,7 @@ int init_neural_net(
     NeuralNetwork *output_nn
 );
 
-// TODO: make a destructor once main has heap allocated arrays for its neural net.
+// Free all pointers in the given neural network object.
 void free_neural_net(NeuralNetwork *neural_net);
 
 #ifdef __cplusplus

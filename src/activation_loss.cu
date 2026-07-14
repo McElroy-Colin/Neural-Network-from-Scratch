@@ -1,7 +1,8 @@
 
-#include "activation_functions.h"
+#include "activation_loss.cuh"
+
 // x should be const?
-double activation_func_hst(double x, const ActivationFunc func) {
+__device__ double activation_func_dvc(double x, const ActivationFunc func) {
     switch (func) {
         case TEST:
             return x;

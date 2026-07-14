@@ -3,7 +3,7 @@
 
 
 
-#include "activation_functions.cuh"
+#include "activation_loss.cuh"
 #include "neural_net.h"
 
 /*

@@ -5,14 +5,50 @@
 //#include <string.h>
 
 #include "neural_net.h"
-#include "activation_functions.h"
+#include "activation_loss.h"
 #include "compute_utils.h"
 #include "memory_utils.h"
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
+int nn_dimcheck(unsigned int num_features,
+    unsigned int *layers,
+    unsigned int num_layers,
+    unsigned int num_weights,
+    unsigned int num_biases
+) {
+    if (num_features == 0) {
+        fprintf(stderr, "from nn_dimcheck(), num_features must be > 0\n");
+        return -1;
+    } else if (num_layers == 0) {
+        fprintf(stderr, "from nn_dimcheck(), num_layers must be > 0\n");
+        return -1;
+    } else if (num_weights == 0) {
+        fprintf(stderr, "from nn_dimcheck(), num_weights must be > 0\n");
+        return -1;
+    } else if (num_biases == 0) {
+        fprintf(stderr, "from nn_dimcheck(), num_biases must be > 0\n");
+        return -1;
+    }
 
-// TODO return by value here
+    unsigned int pred_num_weights = layers[0]*num_features;
+    unsigned int pred_num_biases = layers[0];
+    for (int i = 1; i < num_layers; i++) {
+        pred_num_weights += layers[i]*layers[i - 1];
+        pred_num_biases += layers[i];
+    }
+
+    if (num_weights != pred_num_weights) {
+        fprintf(stderr, "from nn_dimcheck(), num_weights does not match layer/feature dimensions\n");
+        return -1;
+    } else if (num_biases != pred_num_biases) {
+        fprintf(stderr, "from nn_dimcheck(), num_biases does not match layer/feature dimensions\n");
+        return -1;
+    }
+
+    return 0;
+}
+
 int init_neural_net(
     unsigned int num_features,
     unsigned int *layers,
@@ -24,6 +60,12 @@ int init_neural_net(
     ActivationFunc *activation_fns,
     NeuralNetwork *output_nn
 ) {
+    int err = nn_dimcheck(num_features, layers, num_layers, num_weights, num_biases);
+    if (err == -1) {
+        fprintf(stderr, "from init_neural_net(), nn_dimcheck() error\n");
+        return -1;
+    }
+
     // Calculate maximum layer size including input layer.
     unsigned int max_layer_size = arr_max(layers, num_layers);
     max_layer_size = max_layer_size > num_features ? max_layer_size : num_features;
@@ -34,7 +76,6 @@ int init_neural_net(
         fprintf(stderr, "from init_neural_net(), memory allocation error\n");
         return -1;
     }
-
     unsigned int *bias_offsets = compute_bias_offsets(num_layers, layers);
     if (!bias_offsets) {
         fprintf(stderr, "from init_neural_net(), memory allocation error\n");
@@ -59,7 +100,7 @@ int init_neural_net(
 }
 
 void free_neural_net(NeuralNetwork *neural_net) {
-    /* TEMP, current test file uses static arrays for some elements of the neural network object.
+    /* TODO, current test file uses static arrays for some elements of the neural network object.
     free_ptrs(
         neural_net->layers, 
         neural_net->weights,
@@ -164,12 +205,12 @@ int train_hst( // TODO: make what error function to use an argument of the funct
 ) {
 
     if (batch_size == 0) {
-    fprintf(stderr, "from train_hst(), batch_size must be > 0\n");
-    return -1;
+        fprintf(stderr, "from train_hst(), batch_size must be > 0\n");
+        return -1;
     } else if (num_vectors == 0) {
-    fprintf(stderr, "from train_hst(), num_vectors must be > 0\n");
-    return -1;
-}
+        fprintf(stderr, "from train_hst(), num_vectors must be > 0\n");
+        return -1;
+    }
 
     // Hoist pointers from the neural network object to avoid constant dereferencing.
     double *weights = neural_net->weights;
@@ -219,18 +260,22 @@ int train_hst( // TODO: make what error function to use an argument of the funct
         double *curr_yhats = y_hats;
         // Forward pass loop for the current batch.
         for (int fp = 0; fp < batch_size; fp++) { // TODO: last batch is usually smaller, so last iteration could be faster.
+            // Give the `curr_yhats` buffer the current feature vector.
             memcpy(curr_yhats, feature_vectors, num_features*sizeof(double));
 
             // `curr_yhats` will now hold the current forward pass output. 
             feed_forward_hst(neural_net, curr_yhats, buffer2); //  TODO: could write a faster training ff version
             
+            // `feed_forward_hst` populates the next `output_size` elements of `curr_yhats`.
             curr_yhats += output_size;
+            // Increment to the next feature vector.
             feature_vectors += num_features;
         }
         // Get error values for each output vector of the batch.
         batch_mse(ys, y_hats, output_size, batch_size, errs); // TODO choice argument...
 
         // NEXT: compute gradient and adjust weights.
+
 
     }
 
