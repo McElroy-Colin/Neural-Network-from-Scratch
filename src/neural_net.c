@@ -162,6 +162,15 @@ int train_hst( // TODO: make what error function to use an argument of the funct
     const unsigned int num_vectors, // number of training vectors used
     const unsigned int batch_size // number of feature vector pairs per batch
 ) {
+
+    if (batch_size == 0) {
+    fprintf(stderr, "from train_hst(), batch_size must be > 0\n");
+    return -1;
+    } elif (num_vectors == 0) {
+    fprintf(stderr, "from train_hst(), num_vectors must be > 0\n");
+    return -1;
+}
+
     // Hoist pointers from the neural network object to avoid constant dereferencing.
     double *weights = neural_net->weights;
     double *biases = neural_net->biases;
