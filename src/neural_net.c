@@ -166,7 +166,7 @@ int train_hst( // TODO: make what error function to use an argument of the funct
     if (batch_size == 0) {
     fprintf(stderr, "from train_hst(), batch_size must be > 0\n");
     return -1;
-    } elif (num_vectors == 0) {
+    } else if (num_vectors == 0) {
     fprintf(stderr, "from train_hst(), num_vectors must be > 0\n");
     return -1;
 }
