@@ -31,6 +31,7 @@ int nn_dimcheck(unsigned int num_features,
         return -1;
     }
 
+    // weight/bias dimensions depend on the layers, including input.
     unsigned int pred_num_weights = layers[0]*num_features;
     unsigned int pred_num_biases = layers[0];
     for (int i = 1; i < num_layers; i++) {
@@ -186,10 +187,12 @@ void batch_mse(const double *ys,
     const double *y_hats, 
     const unsigned int count_per_vec,
     const unsigned int num_vecs,
-    double *errs) {
+    double *errors_out) {
     
     for (int i = 0; i < num_vecs; i++) {
-        errs[i] = mean_squared_error(ys, y_hats, count_per_vec);
+        errors_out[i] = mean_squared_error(ys, y_hats, count_per_vec);
+        ys += count_per_vec;
+        y_hats += count_per_vec;
     }
 
     return;
@@ -201,7 +204,8 @@ int train_hst( // TODO: make what error function to use an argument of the funct
     const double *feature_vectors, // Flattened array of ALL feature vectors (length num_features*num_vectors)
     const double *ys, // flattened array of output vectors where the i'th corresponds to the i'th feature vector^, length output_size*num_vectors
     const unsigned int num_vectors, // number of training vectors used
-    const unsigned int batch_size // number of feature vector pairs per batch
+    const unsigned int batch_size, // number of feature vectors per batch
+    const ErrorGrad *loss_gradient
 ) {
 
     if (batch_size == 0) {
@@ -248,7 +252,7 @@ int train_hst( // TODO: make what error function to use an argument of the funct
         free(y_hats);
         return -1;
     }
-    double *errs = malloc(batch_size*sizeof(double));
+    double *errors_out = malloc(batch_size*sizeof(double));
     if (!buffer2) {
         fprintf(stderr, "from train_hst(), memory allocation error\n");
         free_ptrs(y_hats, buffer2, NULL);
@@ -272,14 +276,15 @@ int train_hst( // TODO: make what error function to use an argument of the funct
             feature_vectors += num_features;
         }
         // Get error values for each output vector of the batch.
-        batch_mse(ys, y_hats, output_size, batch_size, errs); // TODO choice argument...
+        batch_mse(ys, y_hats, output_size, batch_size, errors_out); // TODO choice argument...
 
         // NEXT: compute gradient and adjust weights.
+        // ...
 
-
+        y_hats = curr_yhats;
     }
 
 
-    free_ptrs(y_hats, buffer2, errs, NULL);
+    free_ptrs(y_hats, buffer2, errors_out, NULL);
 }
 

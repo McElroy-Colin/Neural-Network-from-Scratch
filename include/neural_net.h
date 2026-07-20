@@ -50,6 +50,22 @@ typedef struct {
     unsigned int num_biases;
 } NeuralNetwork;
 
+// Batch loss function pointer.
+typedef void (*BatchLoss)(
+    const double*,
+    const double*,
+    const unsigned int,
+    const unsigned int,
+    double*
+);
+
+// TODO: Gradient function ptr.
+
+typedef struct {
+    BatchLoss loss_func;
+    // grad fn here...
+} ErrorGrad;
+
 // Used in both C and CUDA versions, so define it as C++ code.
 #ifdef __cplusplus
 extern "C" {
@@ -65,9 +81,12 @@ int nn_dimcheck(unsigned int num_features,
     unsigned int num_biases
 );
 
-// Initialize all variables of a neural network object given the necessary parameters.
-// Returns the created neural network object, or `NULL` on error.
-// Note, all arrays in the neural network object must be freed on a successful call.
+/*
+Initialize all variables of a neural network object given the necessary parameters.
+Error when given parameters conflict with other parameters' dimensionality.
+Returns the created neural network object, or `NULL` on error.
+Note, all arrays in the neural network object must be freed on a successful call.
+*/
 int init_neural_net(
     unsigned int num_features,
     unsigned int *layers,
@@ -113,7 +132,7 @@ double mean_squared_error(
 );
 
 /*
-Compute the MSE for a batch of train-test vector pairs. Store the results in the `errs` matrix.
+Compute the MSE for a batch of train-test vector pairs. Store the results in the `errors_out` matrix.
 This function assumes that each vector in the `ys` and `y_hats` matrices is length `count_per_vec`, and 
 that there are `count_per_vec*num_vecs` total elements in each.
 
@@ -123,7 +142,7 @@ Parameters:
     `y_hats`: Same as `ys`, but for observed vectors. (input)
     `count_per_vec`: Length of each vector in the above matrices. (input)
     `num_vecs`: Number of vectors in the above matrices. (input)
-    `errs`: Allocated vector of length `num_vecs` to hold each MSE value. (output)
+    `errors_out`: Allocated vector of length `num_vecs` to hold each MSE value. (output)
 
 */
 void batch_mse(
@@ -131,7 +150,7 @@ void batch_mse(
     const double *y_hats, 
     const unsigned int count_per_vec,
     const unsigned int num_vecs,
-    double *errs
+    double *errors_out
 );
 
 #endif
