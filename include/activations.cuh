@@ -1,7 +1,7 @@
-#ifndef ACTIVATION_LOSS_CUH
-#define ACTIVATION_LOSS_CUH
+#ifndef ACTIVATIONS_CUH
+#define ACTIVATIONS_CUH
 
-#include "activation_loss.h"
+#include "activations.h"
 
 __device__ double activation_func_dvc(double x, const ActivationFunc func);
 

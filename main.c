@@ -9,7 +9,7 @@
 #include "compute_utils.h"
 
 #include "neural_net.h"
-#include "activation_loss.h"
+#include "activations.h"
 
 // Take command line or runtime user input and construct a feed-forwad neural network.
 int main(int argc, char** argv) {
