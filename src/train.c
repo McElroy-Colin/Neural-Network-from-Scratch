@@ -1,4 +1,7 @@
+#include <stdio.h>
+
 #include "train.h"
+#include "neural_net.h"
 
 double mean_squared_error(const double *y, const double *y_hat, const unsigned int count) {
         double sum = 0.0;
@@ -27,6 +30,25 @@ void batch_mse(const double *ys,
     }
 
     return;
+}
+
+double *back_propogation(
+    const ActivationFunc *activation_fns,
+    const double *weights,
+    const unsigned int num_layers,
+    const double *zs, // flattened per layer, so the first `batch size` elements are the first layer's output for each example
+    const double *as,
+    const unsigned int batch_size,
+    double *weight_grads_out, // initialized to 0
+    double *bias_grads_out // initialized to 0 (calloc)
+) {
+    for (int l = num_layers - 1; l >= 0; l--) {
+        PartialGrad activation_deriv = activation_grad_dispatch(activation_fns[l]);
+
+        for (int i = batch_size; i > 0; i--) {
+            weight_grads_out
+        }
+    }
 }
 
 int train_hst( // TODO: make what error function to use an argument of the function call, use function pointers
@@ -108,6 +130,8 @@ int train_hst( // TODO: make what error function to use an argument of the funct
         }
         // Get error values for each output vector of the batch.
         batch_mse(ys, y_hats, output_size, batch_size, errors_out); // TODO choice argument...
+
+        // NEXT: backprop function to get the gradient up to the final layer...
 
         // NEXT: compute gradient and adjust weights.
         // ...

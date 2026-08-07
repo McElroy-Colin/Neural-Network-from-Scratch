@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#include "activation_loss.h"
+#include "activations.h"
 
 // x should be const?
 double activation_func_hst(double x, const ActivationFunc func) {

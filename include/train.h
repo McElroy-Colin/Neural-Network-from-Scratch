@@ -1,5 +1,7 @@
 // Header file for neural network training architecture.
 
+#include "activations.h"
+
 // Batch loss function pointer.
 typedef void (*BatchLoss) (
     const double*, // True label vectors
@@ -9,9 +11,7 @@ typedef void (*BatchLoss) (
     double* // Output array: will hold a loss value for each vector
 );
 
-typedef void (*BatchGrad) (
-
-);
+typedef double (*PartialGrad) (double);
 
 // TODO: Gradient function ptr.
 
@@ -19,6 +19,20 @@ typedef struct {
     BatchLoss loss_func;
     // grad fn here...
 } ErrorGrad;
+
+// TODO: Comment and implement
+PartialGrad activation_grad_dispatch(ActivationFunc activation);
+
+double *back_propogation( // goes only to the last layer, then we compute the final gradient in the train function
+    const ActivationFunc *activation_fns,
+    const double *weights,
+    const unsigned int num_layers,
+    const double *zs,
+    const double *as,
+    const unsigned int batch_size,
+    double *weight_grads_out,
+    double *bias_grads_out
+);
 
 // TODO: Each layer will have its own gradient that depends on that layer's activation.
 //       So, train should build an array of gradient functions based on the activations...

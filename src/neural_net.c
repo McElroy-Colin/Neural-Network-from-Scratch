@@ -10,8 +10,6 @@
 #include "compute_utils.h"
 #include "memory_utils.h"
 
-#define MAX(a, b) ((a) > (b) ? (a) : (b))
-
 int nn_dimcheck(unsigned int num_features,
     unsigned int *layers,
     unsigned int num_layers,

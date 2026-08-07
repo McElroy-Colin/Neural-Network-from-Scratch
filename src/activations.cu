@@ -1,5 +1,5 @@
 
-#include "activation_loss.cuh"
+#include "activations.cuh"
 
 // x should be const?
 __device__ double activation_func_dvc(double x, const ActivationFunc func) {
